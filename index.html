@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sai Krishna Caterers - Shiridi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+    <style>
+        body { background-color: #7f1d1d; } /* Primary Deep Red Background */
+    </style>
+</head>
+<body class="text-white min-h-screen p-4 font-sans">
+
+    <div class="max-w-md mx-auto bg-red-900/90 rounded-2xl p-6 shadow-2xl border border-red-700">
+        <div class="text-center mb-6">
+            <h1 class="text-3xl font-bold tracking-wide">Sai Krishna Caterers</h1>
+            <p class="text-red-300 text-sm font-medium">Shiridi</p>
+            <span class="inline-block mt-2 bg-yellow-500 text-red-950 text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider">
+                Take away Train parcels
+            </span>
+        </div>
+
+        <div class="flex justify-end space-x-2 mb-4">
+            <button onclick="refreshMenu()" class="bg-red-700 hover:bg-red-600 px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1">
+                🔄 Refresh Menu
+            </button>
+            <button onclick="cancelEntireOrder()" class="bg-orange-600 hover:bg-orange-500 px-3 py-1.5 rounded-lg text-xs font-semibold transition">
+                🚫 Cancel Order
+            </button>
+        </div>
+
+        <div id="menu-container" class="space-y-4 mb-6">
+            </div>
+
+        <div class="bg-red-950 p-4 rounded-xl border border-red-800 mb-6">
+            <div class="flex justify-between items-center text-lg font-bold">
+                <span>Grand Total:</span>
+                <span class="text-yellow-400 text-2xl">₹<span id="grand-total">0</span></span>
+            </div>
+        </div>
+
+        <div class="space-y-3 bg-red-950/50 p-4 rounded-xl border border-red-800/60 mb-6">
+            <h3 class="text-sm font-semibold uppercase tracking-wider text-red-300">Passenger & Delivery Details</h3>
+            <div>
+                <label class="block text-xs mb-1 text-gray-300">Full Name</label>
+                <input type="text" id="cust-name" class="w-full bg-red-900 border border-red-700 rounded p-2 text-white placeholder-red-400 focus:outline-none focus:ring-2 focus:ring-yellow-500" placeholder="Enter passenger name">
+            </div>
+            <div>
+                <label class="block text-xs mb-1 text-gray-300">WhatsApp Mobile Number</label>
+                <input type="tel" id="cust-phone" class="w-full bg-red-900 border border-red-700 rounded p-2 text-white placeholder-red-400 focus:outline-none focus:ring-2 focus:ring-yellow-500" placeholder="10-digit number">
+            </div>
+            <div>
+                <label class="block text-xs mb-1 text-gray-300">Train Delivery Time</label>
+                <input type="time" id="cust-time" class="w-full bg-red-900 border border-red-700 rounded p-2 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500">
+            </div>
+        </div>
+
+        <div class="bg-white text-gray-900 p-4 rounded-xl text-center shadow-inner mb-6 hidden" id="payment-box">
+            <p class="text-xs font-bold text-red-800 uppercase tracking-tight mb-2">Scan QR to pay & send screenshot to WhatsApp</p>
+            <div class="flex justify-center mb-3">
+                <img id="payment-qr" src="" alt="Payment QR Code" class="w-40 h-40 border-2 border-dashed border-gray-300 p-1">
+            </div>
+            <p class="text-sm font-extrabold text-gray-700 mb-2">Amount: ₹<span id="qr-amount">0</span></p>
+            <button onclick="submitOrderToFirebase()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-lg transition shadow">
+                ✅ Done! Place Order
+            </button>
+        </div>
+
+        <div class="space-y-3">
+            <button id="btn-total" onclick="calculateTotalAndShowQR()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-red-950 font-extrabold py-3 rounded-xl transition text-center shadow-lg uppercase tracking-wider">
+                💰 Generate Bill Total
+            </button>
+            <button onclick="shareAppLink()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 rounded-xl transition text-sm flex items-center justify-center gap-2">
+                🔗 Share App Link
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Updated with your authentic shirdi-project configurations
+        const firebaseConfig = {
+            apiKey: "AIzaSyBjG-vnr8B4-tQpPyflqdY99OBvLuZRkoc",
+            authDomain: "shirdi-project.firebaseapp.com",
+            databaseURL: "https://shirdi-project-default-rtdb.firebaseio.com",
+            projectId: "shirdi-project",
+            storageBucket: "shirdi-project.firebasestorage.app",
+            messagingSenderId: "236969291601",
+            appId: "1:236969291601:web:aca0fdad3bae8b3d10ed70",
+            measurementId: "G-NN9PS51LJ8"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        const sampleMenu = [
+            { id: "item1", name: "Special Train Meal Tray", price: 140, image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120" },
+            { id: "item2", name: "Shiridi Poha & Sabudana Vada Combo", price: 80, image: "https://images.unsplash.com/photo-1601050690597-df056fb4ce78?w=120" },
+            { id: "item3", name: "Idli Sambar Pack (4 Pcs)", price: 60, image: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=120" },
+            { id: "item4", name: "Mineral Water Bottle (1L)", price: 20, image: "https://images.unsplash.com/photo-1608885898957-a599fb18de36?w=120" }
+        ];
+
+        let cart = {};
+
+        function loadMenu() {
+            const container = document.getElementById('menu-container');
+            container.innerHTML = '';
+            sampleMenu.forEach(item => {
+                if(!cart[item.id]) cart[item.id] = 0;
+                
+                const itemEl = document.createElement('div');
+                itemEl.className = "flex items-center justify-between bg-red-950/60 p-3 rounded-xl border border-red-800/80";
+                itemEl.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <img src="${item.image}" class="w-14 h-14 object-cover rounded-lg border border-red-700 bg-red-900" alt="${item.name}">
+                        <div>
+                            <h4 class="font-bold text-sm leading-tight">${item.name}</h4>
+                            <p class="text-yellow-400 text-xs mt-0.5">₹${item.price}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2 bg-red-900 rounded-lg p-1 border border-red-700">
+                        <button onclick="updateQty('${item.id}', -1)" class="w-7 h-7 bg-red-700 hover:bg-red-600 rounded font-bold text-sm flex items-center justify-center transition">-</button>
+                        <span id="qty-${item.id}" class="w-6 text-center font-bold text-sm">${cart[item.id]}</span>
+                        <button onclick="updateQty('${item.id}', 1)" class="w-7 h-7 bg-red-700 hover:bg-red-600 rounded font-bold text-sm flex items-center justify-center transition">+</button>
+                    </div>
+                `;
+                container.appendChild(itemEl);
+            });
+            updateGrandTotalUI();
+        }
+
+        function updateQty(id, change) {
+            cart[id] = Math.max(0, (cart[id] || 0) + change);
+            document.getElementById(`qty-${id}`).innerText = cart[id];
+            updateGrandTotalUI();
+        }
+
+        function getGrandTotal() {
+            return sampleMenu.reduce((sum, item) => sum + ((cart[item.id] || 0) * item.price), 0);
+        }
+
+        function updateGrandTotalUI() {
+            document.getElementById('grand-total').innerText = getGrandTotal();
+        }
+
+        function calculateTotalAndShowQR() {
+            const total = getGrandTotal();
+            if(total <= 0) {
+                alert("Please add at least one item to your parcel cart.");
+                return;
+            }
+            
+            const upiId = "saikrishnacaterers@upi"; 
+            const merchantName = "Sai Krishna Caterers Shiridi";
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`upi://pay?pa=${upiId}&pn=${merchantName}&am=${total}&cu=INR`)}`;
+            
+            document.getElementById('qr-amount').innerText = total;
+            document.getElementById('payment-qr').src = qrUrl;
+            document.getElementById('payment-box').classList.remove('hidden');
+            document.getElementById('payment-box').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function submitOrderToFirebase() {
+            const name = document.getElementById('cust-name').value.trim();
+            const phone = document.getElementById('cust-phone').value.trim();
+            const time = document.getElementById('cust-time').value;
+            const total = getGrandTotal();
+
+            if(!name || !phone || !time) {
+                alert("Please fill out your Name, Mobile, and Delivery Time details.");
+                return;
+            }
+
+            let purchasedItems = [];
+            sampleMenu.forEach(item => {
+                if(cart[item.id] > 0) {
+                    purchasedItems.push(`${item.name} (x${cart[item.id]})`);
+                }
+            });
+
+            const orderPayload = {
+                customerName: name,
+                customerPhone: phone,
+                deliveryTime: time,
+                itemsSummary: purchasedItems.join(', '),
+                grandTotal: total,
+                status: "Received", 
+                paymentVerified: false, 
+                timestamp: firebase.database.ServerValue.TIMESTAMP,
+                dateStr: new Date().toLocaleDateString(),
+                timeStr: new Date().toLocaleTimeString()
+            };
+
+            db.ref('shiridi_orders').push(orderPayload)
+                .then(() => {
+                    alert("Order submitted successfully to Kitchen! Redirecting to WhatsApp to send payment screenshot proof.");
+                    const waText = encodeURIComponent(`Hi Sai Krishna Caterers, I just placed a parcel order for ₹${total}. Here is my payment confirmation screenshot.\nName: ${name}\nTime: ${time}`);
+                    window.open(`https://wa.me/${phone}?text=${waText}`, '_blank');
+                    cancelEntireOrder(); 
+                })
+                .catch(err => alert("Database Error: " + err.message));
+        }
+
+        function cancelEntireOrder() {
+            cart = {};
+            document.getElementById('cust-name').value = '';
+            document.getElementById('cust-phone').value = '';
+            document.getElementById('cust-time').value = '';
+            document.getElementById('payment-box').classList.add('hidden');
+            loadMenu();
+        }
+
+        function refreshMenu() {
+            loadMenu();
+            alert("Inputs and item selection refreshed!");
+        }
+
+        function shareAppLink() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Sai Krishna Caterers',
+                    text: 'Order fresh take away train parcels from Shiridi!',
+                    url: window.location.href
+                }).catch(console.error);
+            } else {
+                navigator.clipboard.writeText(window.location.href);
+                alert("App link copied to your clipboard!");
+            }
+        }
+
+        loadMenu();
+    </script>
+</body>
+</html>
