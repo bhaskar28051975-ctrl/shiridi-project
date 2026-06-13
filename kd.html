@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kitchen & Delivery - Shiridi Project</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+    <style>
+        body { background-color: #7f1d1d; }
+    </style>
+</head>
+<body class="text-white min-h-screen p-4 font-sans">
+
+    <div class="max-w-6xl mx-auto">
+        <div class="flex flex-col md:flex-row md:justify-between md:items-center bg-red-950 p-4 rounded-xl border border-red-800 mb-6 gap-4">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight">Kitchen & Delivery Dashboard</h1>
+                <p class="text-xs text-red-300 uppercase tracking-widest font-semibold">Sai Krishna Caterers System</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="refreshDashboardData()" class="bg-red-800 hover:bg-red-700 px-4 py-2 text-sm font-bold rounded-lg transition">
+                    🔄 Refresh Orders
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <div class="bg-red-900/40 p-4 rounded-xl border border-red-800/80">
+                <div class="flex items-center justify-between border-b border-red-800 pb-2 mb-4">
+                    <h2 class="font-bold uppercase text-orange-400 text-sm tracking-wider flex items-center gap-2">
+                        📥 1. Inbound/Received
+                    </h2>
+                    <span id="count-received" class="bg-orange-500 text-red-950 text-xs px-2 py-0.5 rounded-full font-bold">0</span>
+                </div>
+                <div id="lane-received" class="space-y-4 max-h-[70vh] overflow-y-auto pr-1"></div>
+            </div>
+
+            <div class="bg-red-900/40 p-4 rounded-xl border border-red-800/80">
+                <div class="flex items-center justify-between border-b border-red-800 pb-2 mb-4">
+                    <h2 class="font-bold uppercase text-yellow-400 text-sm tracking-wider flex items-center gap-2">
+                        🍳 2. Cooking Status
+                    </h2>
+                    <span id="count-cooking" class="bg-yellow-500 text-red-950 text-xs px-2 py-0.5 rounded-full font-bold">0</span>
+                </div>
+                <div id="lane-cooking" class="space-y-4 max-h-[70vh] overflow-y-auto pr-1"></div>
+            </div>
+
+            <div class="bg-red-900/40 p-4 rounded-xl border border-red-800/80">
+                <div class="flex items-center justify-between border-b border-red-800 pb-2 mb-4">
+                    <h2 class="font-bold uppercase text-green-400 text-sm tracking-wider flex items-center gap-2">
+                        📦 3. Ready For Station
+                    </h2>
+                    <span id="count-ready" class="bg-green-500 text-red-950 text-xs px-2 py-0.5 rounded-full font-bold">0</span>
+                </div>
+                <div id="lane-ready" class="space-y-4 max-h-[70vh] overflow-y-auto pr-1"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Updated with your authentic shirdi-project configurations
+        const firebaseConfig = {
+            apiKey: "AIzaSyBjG-vnr8B4-tQpPyflqdY99OBvLuZRkoc",
+            authDomain: "shirdi-project.firebaseapp.com",
+            databaseURL: "https://shirdi-project-default-rtdb.firebaseio.com",
+            projectId: "shirdi-project",
+            storageBucket: "shirdi-project.firebasestorage.app",
+            messagingSenderId: "236969291601",
+            appId: "1:236969291601:web:aca0fdad3bae8b3d10ed70",
+            measurementId: "G-NN9PS51LJ8"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        function refreshDashboardData() {
+            db.ref('shiridi_orders').off(); 
+            syncActiveOrders();
+        }
+
+        function syncActiveOrders() {
+            db.ref('shiridi_orders').on('value', snapshot => {
+                const data = snapshot.val();
+                
+                document.getElementById('lane-received').innerHTML = '';
+                document.getElementById('lane-cooking').innerHTML = '';
+                document.getElementById('lane-ready').innerHTML = '';
+
+                let counters = { Received: 0, Cooking: 0, Ready: 0 };
+
+                if (!data) {
+                    updateLaneCounters(counters);
+                    return;
+                }
+
+                Object.keys(data).forEach(key => {
+                    const order = data[key];
+                    if (order.status === "Delivered") return; 
+
+                    counters[order.status]++;
+
+                    const card = document.createElement('div');
+                    card.className = "bg-red-950 border border-red-800 rounded-xl p-4 shadow-lg hover:border-red-600 transition space-y-3";
+                    
+                    const payBadgeClass = order.paymentVerified ? "bg-green-600 text-white" : "bg-red-600 text-white border border-red-500 animate-pulse";
+                    const payBadgeText = order.paymentVerified ? "💳 Payment Verified" : "⚠️ Check WhatsApp Screenshot";
+
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="font-bold text-sm text-yellow-400">${order.customerName}</h3>
+                                <p class="text-xs text-gray-300 font-mono mt-0.5">📞 ${order.customerPhone}</p>
+                            </div>
+                            <span class="text-xs font-bold px-2 py-1 rounded text-center ${payBadgeClass}">${payBadgeText}</span>
+                        </div>
+
+                        <div class="bg-red-900/50 p-2.5 rounded border border-red-800 text-xs text-red-100">
+                            <strong>Items:</strong> ${order.itemsSummary}
+                        </div>
+
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-gray-400">Time: <strong class="text-white">${order.deliveryTime}</strong></span>
+                            <span class="font-bold text-yellow-400">Val: ₹${order.grandTotal}</span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 pt-1 border-t border-red-900">
+                            ${!order.paymentVerified ? `
+                                <button onclick="togglePaymentStatus('${key}', true)" class="col-span-2 bg-yellow-500 hover:bg-yellow-400 text-red-950 font-bold py-1 rounded text-xs transition">
+                                    Confirm Screenshot Paid
+                                </button>
+                            ` : `
+                                <button onclick="togglePaymentStatus('${key}', false)" class="col-span-2 bg-gray-700 hover:bg-gray-600 text-white py-0.5 rounded text-[10px] transition">
+                                    Revert to Unpaid Status
+                                </button>
+                            `}
+                            
+                            ${order.status === "Received" ? `
+                                <button onclick="updateOrderStatus('${key}', 'Cooking')" class="col-span-2 bg-orange-600 hover:bg-orange-500 font-bold py-1.5 rounded text-xs transition">
+                                    👨‍🍳 Start Cooking
+                                </button>
+                            ` : ''}
+
+                            ${order.status === "Cooking" ? `
+                                <button onclick="updateOrderStatus('${key}', 'Ready')" class="col-span-2 bg-yellow-500 hover:bg-yellow-400 text-red-950 font-extrabold py-1.5 rounded text-xs transition">
+                                    🔔 Mark Ready Packaged
+                                </button>
+                            ` : ''}
+
+                            ${order.status === "Ready" ? `
+                                <button onclick="updateOrderStatus('${key}', 'Delivered')" class="col-span-2 bg-green-600 hover:bg-green-500 font-bold py-1.5 rounded text-xs transition">
+                                    🚀 Done Delivered to Train
+                                </button>
+                            ` : ''}
+                        </div>
+                    `;
+
+                    if (order.status === "Received") document.getElementById('lane-received').appendChild(card);
+                    if (order.status === "Cooking") document.getElementById('lane-cooking').appendChild(card);
+                    if (order.status === "Ready") document.getElementById('lane-ready').appendChild(card);
+                });
+
+                updateLaneCounters(counters);
+            });
+        }
+
+        function updateOrderStatus(key, newStatus) {
+            db.ref(`shiridi_orders/${key}`).update({ status: newStatus });
+        }
+
+        function togglePaymentStatus(key, boolValue) {
+            db.ref(`shiridi_orders/${key}`).update({ paymentVerified: boolValue });
+        }
+
+        function updateLaneCounters(counts) {
+            document.getElementById('count-received').innerText = counts.Received;
+            document.getElementById('count-cooking').innerText = counts.Cooking;
+            document.getElementById('count-ready').innerText = counts.Ready;
+        }
+
+        syncActiveOrders();
+    </script>
+</body>
+</html>
