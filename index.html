@@ -3,72 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bhaskar Food - Shirdi Project</title>
+    <title>Sai Krishna Caterers - Shirdi Project</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
 </head>
 <body class="bg-gray-50 text-gray-900 min-h-screen font-sans pb-24">
 
-    <!-- Top Branding Header (Styled Verbatim from Screenshot_20260614-144704.png) -->
-    <div class="bg-white border-b border-gray-200 sticky top-0 z-50 px-4 py-3 shadow-sm">
-        <div class="max-w-md mx-auto flex justify-between items-start">
+    <!-- Top Branding Header: Correct Title & Styles -->
+    <div class="bg-red-700 text-white sticky top-0 z-50 px-4 py-4 shadow-md">
+        <div class="max-w-md mx-auto flex justify-between items-center">
             <div>
-                <h1 class="text-2xl font-black text-red-600 italic tracking-tight uppercase">BHASKAR FOOD</h1>
-                <p class="text-xs font-bold text-gray-500 mt-0.5">Delivery Services At <span class="text-red-600">Where You Are.</span></p>
-                <a href="tel:9154095125" class="text-sm font-extrabold text-green-600 flex items-center gap-1 mt-1">
-                    📞 9154095125
-                </a>
+                <h1 class="text-xl font-black tracking-tight uppercase">Sai Krishna Caterers</h1>
+                <p class="text-[10px] text-red-100 uppercase tracking-widest font-semibold mt-0.5">Shirdi Train Delivery Service</p>
             </div>
-            <div class="flex gap-2">
-                <button class="border border-red-200 text-red-600 font-bold text-xs px-3 py-1.5 rounded-full flex items-center gap-1 bg-red-50/50 hover:bg-red-50 tracking-wider uppercase">
-                    <span>🔄</span> Share
-                </button>
-                <button onclick="window.location.reload()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs px-3 py-1.5 rounded-lg tracking-wider uppercase">
-                    Refresh
-                </button>
-            </div>
+            <button onclick="window.location.reload()" class="bg-white/10 hover:bg-white/20 text-white font-bold text-xs px-3 py-1.5 rounded-lg tracking-wider uppercase border border-white/20">
+                Refresh
+            </button>
         </div>
     </div>
 
     <div class="max-w-md mx-auto px-4 mt-6">
-        <!-- Category Title Group Layout -->
+        <!-- Section Heading: Side-by-Side Item View Layout -->
         <div class="flex items-center gap-3 mb-6">
-            <div class="w-1.5 h-8 bg-red-600 rounded-full"></div>
-            <h2 class="text-2xl font-black uppercase text-slate-800 tracking-wide italic">OUR MENU</h2>
+            <div class="w-1.5 h-7 bg-red-700 rounded-full"></div>
+            <h2 class="text-lg font-extrabold uppercase text-gray-800 tracking-wide">Select Food Items</h2>
         </div>
 
-        <!-- Dynamic Live Menu Grid: Displays items Side-by-Side -->
+        <!-- Side-by-Side Grid Layout requested from Screenshot_20260614-144704.png -->
         <div id="menu-container" class="grid grid-cols-2 gap-4">
-            <p class="col-span-2 text-center text-sm text-gray-400 py-8">Loading fresh menu items from database...</p>
+            <p class="col-span-2 text-center text-sm text-gray-400 py-8">Loading menu directly from admin panel...</p>
         </div>
 
-        <!-- Checkout Section (With Manual Delivery Entry) -->
+        <!-- Checkout Form Panel -->
         <div class="mt-8 bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-4">
-            <h3 class="text-sm font-black uppercase text-red-600 tracking-wider border-b pb-2">Customer & Train Details</h3>
+            <h3 class="text-xs font-black uppercase text-red-700 tracking-wider border-b pb-2">Delivery & Customer Details</h3>
             
             <div class="space-y-3">
-                <input type="text" id="cust-name" placeholder="Customer Name" class="w-full border border-gray-300 p-2.5 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-500">
-                <input type="tel" id="cust-phone" placeholder="Mobile Number" class="w-full border border-gray-300 p-2.5 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-500">
+                <input type="text" id="cust-name" placeholder="Customer Name" class="w-full border border-gray-300 p-2.5 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-700">
+                <input type="tel" id="cust-phone" placeholder="Mobile Number" class="w-full border border-gray-300 p-2.5 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-700">
                 
-                <!-- Manual Slot Entry System -->
+                <!-- Manual Slot Entry Layout Component -->
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 px-1">Delivery Time / Train Schedule (Manual Entry)</label>
-                    <input type="text" id="cust-slot-manual" placeholder="e.g., 04:30 PM or Train 12626 Coach S4" class="w-full border border-gray-300 p-2.5 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-500 bg-gray-50">
+                    <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 px-1">Delivery Time / Train Info (Manual)</label>
+                    <input type="text" id="cust-slot-manual" placeholder="e.g., Coach S4 - 12:40 PM" class="w-full border border-gray-300 p-2.5 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-700 bg-gray-50">
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Fixed Floating Bottom Status Bar Panel -->
+    <!-- Fixed Floating Bottom Purchase Bar -->
     <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 shadow-xl z-50">
         <div class="max-w-md mx-auto flex justify-between items-center">
             <div>
-                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider block">Grand Total</span>
-                <span class="text-xl font-black text-slate-900">₹<span id="ui-grand-total">0</span></span>
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider block">Total Amount</span>
+                <span class="text-xl font-black text-gray-900">₹<span id="ui-grand-total">0</span></span>
             </div>
-            <button onclick="submitParcelOrder()" class="bg-red-600 hover:bg-red-700 text-white font-extrabold text-sm px-6 py-3 rounded-xl shadow-md uppercase tracking-wider transition">
-                Book Order 🚀
+            <button onclick="submitParcelOrder()" class="bg-red-700 hover:bg-red-800 text-white font-extrabold text-sm px-6 py-3 rounded-xl shadow-md uppercase tracking-wider transition">
+                Place Order 🚀
             </button>
         </div>
     </div>
@@ -87,22 +79,23 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        let globalProducts = []; // Stores products fetched from admin panel
-        let cartState = {};      // Stores quantities ordered by user
+        let globalProducts = [];
+        let cartState = {};
 
-        // Realtime Listener: Fetches the items added inside admin.html
+        // COORDINTATION FIX: Fallback mapping checks multiple field naming possibilities 
+        // to handle whatever properties your specific admin.html writes to database.
         db.ref('shiridi_products').on('value', snapshot => {
             const data = snapshot.val() || {};
             globalProducts = [];
             
-            // Loop through data keys coming from admin entry logs
             Object.keys(data).forEach(key => {
+                const item = data[key];
                 globalProducts.push({
                     id: key,
-                    name: data[key].name || data[key].itemName,
-                    price: Number(data[key].price || data[key].itemPrice || 0),
-                    img: data[key].image || data[key].itemImage || "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=400",
-                    badge: data[key].badge || ""
+                    name: item.name || item.itemName || item.title || "Unnamed Item",
+                    price: Number(item.price || item.itemPrice || item.rate || 0),
+                    img: item.image || item.itemImage || item.imgUrl || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400",
+                    badge: item.badge || item.itemBadge || ""
                 });
             });
 
@@ -110,13 +103,13 @@
             calculateTotals();
         });
 
-        // Renders items side-by-side mirroring Screenshot_20260614-144704.png
+        // Displays items Side-by-Side matching the design card format rules
         function renderMenuUI() {
             const container = document.getElementById('menu-container');
             container.innerHTML = '';
 
             if (globalProducts.length === 0) {
-                container.innerHTML = `<p class="col-span-2 text-center text-sm text-gray-500 py-8">No products found. Please add products using admin.html!</p>`;
+                container.innerHTML = `<p class="col-span-2 text-center text-sm text-gray-500 py-8">No menu items found. Please check your Admin entries.</p>`;
                 return;
             }
 
@@ -124,20 +117,21 @@
                 const qty = cartState[item.id] || 0;
                 const card = document.createElement('div');
                 
+                // Card visual frame styling
                 card.className = "bg-white border border-gray-200 rounded-3xl p-4 flex flex-col items-center justify-between text-center relative shadow-sm hover:border-red-200 transition";
                 card.innerHTML = `
-                    ${item.badge ? `<span class="absolute top-2 left-2 bg-blue-600 text-white text-[8px] font-black px-1.5 py-1 rounded-md shadow-sm uppercase tracking-tighter">⭐ ${item.badge}</span>` : ''}
-                    <div class="h-32 w-full flex items-center justify-center mb-3">
+                    ${item.badge ? `<span class="absolute top-2 left-2 bg-blue-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded shadow-sm uppercase">${item.badge}</span>` : ''}
+                    <div class="h-28 w-full flex items-center justify-center mb-2">
                         <img src="${item.img}" alt="${item.name}" class="max-h-full max-w-full object-contain rounded-xl">
                     </div>
-                    <h3 class="text-xs font-extrabold text-slate-800 line-clamp-2 px-1 mb-1">${item.name}</h3>
+                    <h3 class="text-xs font-extrabold text-gray-800 line-clamp-2 px-1 mb-1">${item.name}</h3>
                     <p class="text-sm font-black text-red-600 mb-3">₹${item.price}</p>
                     
-                    <!-- Premium Rounded Counter Bar Layout -->
-                    <div class="flex items-center justify-between w-full max-w-[110px] bg-gray-50/80 p-1 rounded-full border border-gray-100">
-                        <button onclick="adjustQty('${item.id}', -1)" class="w-8 h-8 rounded-full bg-red-50 text-red-600 font-black flex items-center justify-center shadow-sm text-base select-none hover:bg-red-100">-</button>
-                        <span class="font-black text-sm text-slate-800">${qty}</span>
-                        <button onclick="adjustQty('${item.id}', 1)" class="w-8 h-8 rounded-full bg-red-600 text-white font-black flex items-center justify-center shadow-md text-base select-none hover:bg-red-700">+</button>
+                    <!-- App Rounded Stepper UI Configuration -->
+                    <div class="flex items-center justify-between w-full max-w-[105px] bg-gray-50 p-1 rounded-full border border-gray-100">
+                        <button onclick="adjustQty('${item.id}', -1)" class="w-7 h-7 rounded-full bg-white text-red-600 border border-gray-200 font-black flex items-center justify-center shadow-sm text-sm select-none hover:bg-gray-100">-</button>
+                        <span class="font-black text-xs text-gray-800">${qty}</span>
+                        <button onclick="adjustQty('${item.id}', 1)" class="w-7 h-7 rounded-full bg-red-700 text-white font-black flex items-center justify-center shadow-md text-sm select-none hover:bg-red-800">+</button>
                     </div>
                 `;
                 container.appendChild(card);
@@ -170,7 +164,7 @@
             const total = calculateTotals();
 
             if(!name || !phone || !manualSlot) {
-                alert("Please complete Name, Mobile, and your Manual Time/Train details.");
+                alert("Please complete Name, Mobile, and Delivery Details.");
                 return;
             }
 
@@ -180,7 +174,7 @@
             });
 
             if(itemsSummaryParts.length === 0) {
-                alert("Your cart is currently empty!");
+                alert("Please add items to your card first!");
                 return;
             }
 
@@ -199,7 +193,7 @@
 
             db.ref('shiridi_orders').push(newOrder)
                 .then(() => {
-                    alert("🎉 Order Booked Successfully!");
+                    alert("🎉 Order Sent Successfully to Kitchen!");
                     cartState = {};
                     document.getElementById('cust-name').value = '';
                     document.getElementById('cust-phone').value = '';
@@ -207,7 +201,7 @@
                     renderMenuUI();
                     calculateTotals();
                 })
-                .catch(err => alert("Error transmitting data: " + err.message));
+                .catch(err => alert("Transmission Error: " + err.message));
         }
     </script>
 </body>
