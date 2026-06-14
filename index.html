@@ -3,99 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sai Krishna Caterers - Shiridi</title>
+    <title>Bhaskar Food - Shirdi Project</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
 </head>
-<body class="bg-gray-50 text-gray-900 min-h-screen p-4 font-sans">
+<body class="bg-gray-50 text-gray-900 min-h-screen font-sans pb-24">
 
-    <div class="max-w-md mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
-        
-        <!-- Header: Deep Red Banner -->
-        <div class="bg-red-700 text-white p-6 text-center shadow-md">
-            <h1 class="text-3xl font-extrabold tracking-wide">Sai Krishna Caterers</h1>
-            <p class="text-red-100 text-sm font-medium mt-1">Shiridi</p>
-            <span class="inline-block mt-3 bg-white text-red-700 text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider shadow-sm">
-                Take away Train parcels
-            </span>
+    <!-- Top Branding Header (Styled Verbatim from Screenshot_20260614-144704.png) -->
+    <div class="bg-white border-b border-gray-200 sticky top-0 z-50 px-4 py-3 shadow-sm">
+        <div class="max-w-md mx-auto flex justify-between items-start">
+            <div>
+                <h1 class="text-2xl font-black text-red-600 italic tracking-tight uppercase">BHASKAR FOOD</h1>
+                <p class="text-xs font-bold text-gray-500 mt-0.5">Delivery Services At <span class="text-red-600">Where You Are.</span></p>
+                <a href="tel:9154095125" class="text-sm font-extrabold text-green-600 flex items-center gap-1 mt-1">
+                    📞 9154095125
+                </a>
+            </div>
+            <div class="flex gap-2">
+                <button class="border border-red-200 text-red-600 font-bold text-xs px-3 py-1.5 rounded-full flex items-center gap-1 bg-red-50/50 hover:bg-red-50 tracking-wider uppercase">
+                    <span>🔄</span> Share
+                </button>
+                <button onclick="window.location.reload()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs px-3 py-1.5 rounded-lg tracking-wider uppercase">
+                    Refresh
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-md mx-auto px-4 mt-6">
+        <!-- Category Title Group Layout -->
+        <div class="flex items-center gap-3 mb-6">
+            <div class="w-1.5 h-8 bg-red-600 rounded-full"></div>
+            <h2 class="text-2xl font-black uppercase text-slate-800 tracking-wide italic">COOL DRINKS</h2>
         </div>
 
-        <div class="p-6 space-y-6">
-            <!-- Action Controls -->
-            <div class="flex justify-end">
-                <button onclick="cancelEntireOrder()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-xs font-bold transition border border-gray-300 shadow-sm">
-                    🚫 Cancel Order
-                </button>
-            </div>
+        <!-- Dynamic Menu Grid matching Screenshot_20260614-144704.png -->
+        <div id="menu-container" class="grid grid-cols-2 gap-4">
+            <!-- Items populate dynamically below -->
+        </div>
 
-            <!-- Food Menu Container (Updates automatically in real-time) -->
+        <!-- Checkout Section (With Manual Delivery Time Entry) -->
+        <div class="mt-8 bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-4">
+            <h3 class="text-sm font-black uppercase text-red-600 tracking-wider border-b pb-2">Customer & Train Details</h3>
+            
+            <div class="space-y-3">
+                <input type="text" id="cust-name" placeholder="Customer Name" class="w-full border border-gray-300 p-2.5 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-500">
+                <input type="tel" id="cust-phone" placeholder="Mobile Number" class="w-full border border-gray-300 p-2.5 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-500">
+                
+                <!-- Manual Slot Entry System replacing the Dropdown Menu -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 px-1">Delivery Time / Train Schedule (Manual)</label>
+                    <input type="text" id="cust-slot-manual" placeholder="e.g., 04:30 PM or Train 12626 Coach S4" class="w-full border border-gray-300 p-2.5 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-500 bg-gray-50">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fixed Floating Bottom Status Bar Panel -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 shadow-xl z-50">
+        <div class="max-w-md mx-auto flex justify-between items-center">
             <div>
-                <h3 class="text-sm font-bold uppercase tracking-wider text-red-700 mb-3 border-b pb-1">🍱 Select Items</h3>
-                <div id="menu-container" class="space-y-3">
-                    <p class="text-center text-xs text-gray-500 py-4">Loading live delicious train parcels...</p>
-                </div>
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider block">Grand Total</span>
+                <span class="text-xl font-black text-slate-900">₹<span id="ui-grand-total">0</span></span>
             </div>
-
-            <!-- Cart Summary -->
-            <div class="bg-red-50 p-4 rounded-xl border border-red-100">
-                <div class="flex justify-between items-center text-base font-bold text-gray-800">
-                    <span>Grand Total:</span>
-                    <span class="text-red-700 text-2xl font-extrabold">₹<span id="grand-total">0</span></span>
-                </div>
-            </div>
-
-            <!-- Customer Form -->
-            <div class="space-y-4 bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-inner">
-                <h3 class="text-xs font-bold uppercase tracking-wider text-red-700">Passenger & Delivery Details</h3>
-                
-                <div>
-                    <label class="block text-xs font-bold mb-1 text-gray-700">Full Name</label>
-                    <input type="text" id="cust-name" class="w-full bg-white border border-gray-300 rounded p-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent" placeholder="Enter passenger name">
-                </div>
-                
-                <div>
-                    <label class="block text-xs font-bold mb-1 text-gray-700">WhatsApp Mobile Number</label>
-                    <input type="tel" id="cust-phone" class="w-full bg-white border border-gray-300 rounded p-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent" placeholder="10-digit number">
-                </div>
-                
-                <!-- Simplified Delivery Time Dropdown Selector -->
-                <div>
-                    <label class="block text-xs font-bold mb-1 text-gray-700">Expected Delivery Time Slot</label>
-                    <select id="cust-time" class="w-full bg-white border border-gray-300 rounded p-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent">
-                        <option value="">-- Select Time Slot --</option>
-                        <option value="Morning (06:00 AM - 09:00 AM)">Morning (06:00 AM - 09:00 AM)</option>
-                        <option value="Mid-Day (09:00 AM - 12:00 PM)">Mid-Day (09:00 AM - 12:00 PM)</option>
-                        <option value="Lunch Hour (12:00 PM - 03:00 PM)">Lunch Hour (12:00 PM - 03:00 PM)</option>
-                        <option value="Afternoon (03:00 PM - 06:00 PM)">Afternoon (03:00 PM - 06:00 PM)</option>
-                        <option value="Dinner Hour (06:00 PM - 09:00 PM)">Dinner Hour (06:00 PM - 09:00 PM)</option>
-                        <option value="Late Night (09:00 PM - 11:59 PM)">Late Night (09:00 PM - 11:59 PM)</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Payment Step -->
-            <div class="bg-gray-50 border-2 border-dashed border-red-200 text-gray-900 p-4 rounded-xl text-center shadow-inner hidden" id="payment-box">
-                <p class="text-xs font-bold text-red-700 uppercase tracking-tight mb-3">Scan QR to pay & send screenshot via WhatsApp</p>
-                <div class="flex justify-center mb-3">
-                    <img id="payment-qr" src="" alt="Payment QR Code" class="w-44 h-44 border border-gray-300 p-2 bg-white rounded-lg shadow-sm">
-                </div>
-                <p class="text-base font-extrabold text-gray-800 mb-3">Amount Due: <span class="text-red-700">₹<span id="qr-amount">0</span></span></p>
-                <button onclick="submitOrderToFirebase()" class="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-2.5 rounded-lg transition shadow-md tracking-wider text-sm uppercase">
-                    ✅ Done! Place Order
-                </button>
-            </div>
-
-            <!-- Primary Actions -->
-            <div class="space-y-3 pt-2">
-                <!-- Text changed from "Generate Bill Total" to "Total bill" -->
-                <button id="btn-total" onclick="calculateTotalAndShowQR()" class="w-full bg-red-700 hover:bg-red-800 text-white font-extrabold py-3.5 rounded-xl transition text-center shadow-md uppercase tracking-wider text-sm">
-                    💰 Total bill
-                </button>
-                <button onclick="shareAppLink()" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2.5 rounded-xl transition text-xs flex items-center justify-center gap-2 shadow-sm">
-                    🔗 Share App Link
-                </button>
-            </div>
+            <button onclick="submitParcelOrder()" class="bg-red-600 hover:bg-red-700 text-white font-extrabold text-sm px-6 py-3 rounded-xl shadow-md uppercase tracking-wider transition">
+                Book Order 🚀
+            </button>
         </div>
     </div>
 
@@ -113,147 +87,113 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        let currentLiveMenu = {};
-        let cart = {};
+        // Sample Inventory Data mirroring product configurations
+        const productsList = [
+            { id: "p1", name: "Sprit 250 ml", price: 26, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=400" },
+            { id: "p2", name: "Coca cola 250ml", price: 26, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=400", badge: "PACK OF 28" },
+            { id: "p3", name: "Fanta 250ml", price: 26, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=400" },
+            { id: "p4", name: "Thumbs up 250ml", price: 26, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=400" }
+        ];
 
-        // Automatic live snapshot updating eliminates the need for manual refreshes
-        db.ref('shiridi_menu').on('value', snapshot => {
-            currentLiveMenu = snapshot.val() || {};
-            renderMenuUI();
-        });
+        let cartState = {};
 
         function renderMenuUI() {
             const container = document.getElementById('menu-container');
             container.innerHTML = '';
-            
-            const keys = Object.keys(currentLiveMenu);
-            if(keys.length === 0) {
-                container.innerHTML = `<p class="text-center text-xs text-gray-500 py-6 font-medium">The menu database is empty. Please configure items in your Admin panel.</p>`;
-                return;
-            }
 
-            keys.forEach(id => {
-                const item = currentLiveMenu[id];
-                if(cart[id] === undefined) cart[id] = 0;
+            productsList.forEach(item => {
+                const qty = cartState[item.id] || 0;
+                const card = document.createElement('div');
                 
-                const itemEl = document.createElement('div');
-                itemEl.className = "flex items-center justify-between bg-white p-3 rounded-xl border border-gray-200 shadow-sm hover:border-red-200 transition";
-                itemEl.innerHTML = `
-                    <div class="flex items-center space-x-3">
-                        <img src="${item.image}" class="w-14 h-14 object-cover rounded-lg border border-gray-200 bg-gray-100" alt="${item.name}">
-                        <div>
-                            <h4 class="font-bold text-sm leading-tight text-gray-900">${item.name}</h4>
-                            <p class="text-red-700 text-xs font-bold mt-0.5">₹${item.price}</p>
-                        </div>
+                // Matches the visual layout structure seen in Screenshot_20260614-144704.png
+                card.className = "bg-white border border-gray-200 rounded-3xl p-4 flex flex-col items-center justify-between text-center relative shadow-sm";
+                card.innerHTML = `
+                    ${item.badge ? `<span class="absolute top-2 left-2 bg-blue-600 text-white text-[8px] font-black px-1.5 py-1 rounded-md shadow-sm line-clamp-1">⭐ ${item.badge}</span>` : ''}
+                    <div class="h-32 w-full flex items-center justify-center mb-3">
+                        <img src="${item.img}" alt="${item.name}" class="max-h-full max-w-full object-contain rounded-xl">
                     </div>
-                    <div class="flex items-center space-x-2 bg-gray-50 rounded-lg p-1 border border-gray-200">
-                        <button onclick="updateQty('${id}', -1)" class="w-7 h-7 bg-white hover:bg-gray-200 text-gray-800 rounded border border-gray-300 font-bold text-sm flex items-center justify-center transition shadow-sm">-</button>
-                        <span id="qty-${id}" class="w-6 text-center font-bold text-sm text-gray-800">${cart[id]}</span>
-                        <button onclick="updateQty('${id}', 1)" class="w-7 h-7 bg-white hover:bg-gray-200 text-gray-800 rounded border border-gray-300 font-bold text-sm flex items-center justify-center transition shadow-sm">+</button>
+                    <h3 class="text-xs font-extrabold text-slate-800 line-clamp-2 px-1 mb-1">${item.name}</h3>
+                    <p class="text-sm font-black text-red-600 mb-3">₹${item.price}</p>
+                    
+                    <!-- App Styled Rounded Stepper Controls -->
+                    <div class="flex items-center justify-between w-full max-w-[110px] bg-gray-50/80 p-1 rounded-full border border-gray-100">
+                        <button onclick="adjustQty('${item.id}', -1)" class="w-8 h-8 rounded-full bg-red-50 text-red-600 font-black flex items-center justify-center shadow-sm text-base focus:outline-none select-none hover:bg-red-100">-</button>
+                        <span class="font-black text-sm text-slate-800">${qty}</span>
+                        <button onclick="adjustQty('${item.id}', 1)" class="w-8 h-8 rounded-full bg-red-600 text-white font-black flex items-center justify-center shadow-md text-base focus:outline-none select-none hover:bg-red-700">+</button>
                     </div>
                 `;
-                container.appendChild(itemEl);
+                container.appendChild(card);
             });
-            updateGrandTotalUI();
         }
 
-        function updateQty(id, change) {
-            cart[id] = Math.max(0, (cart[id] || 0) + change);
-            if(document.getElementById(`qty-${id}`)) {
-                document.getElementById(`qty-${id}`).innerText = cart[id];
-            }
-            updateGrandTotalUI();
-        }
-
-        function getGrandTotal() {
-            return Object.keys(currentLiveMenu).reduce((sum, id) => {
-                return sum + ((cart[id] || 0) * (currentLiveMenu[id].price || 0));
-            }, 0);
-        }
-
-        function updateGrandTotalUI() {
-            document.getElementById('grand-total').innerText = getGrandTotal();
-        }
-
-        function calculateTotalAndShowQR() {
-            const total = getGrandTotal();
-            if(total <= 0) {
-                alert("Please add at least one item to your parcel cart.");
-                return;
-            }
+        function adjustQty(id, change) {
+            const current = cartState[id] || 0;
+            const updated = current + change;
+            if (updated <= 0) delete cartState[id];
+            else cartState[id] = updated;
             
-            const upiId = "saikrishnacaterers@upi"; 
-            const merchantName = "Sai Krishna Caterers Shiridi";
-            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`upi://pay?pa=${upiId}&pn=${merchantName}&am=${total}&cu=INR`)}`;
-            
-            document.getElementById('qr-amount').innerText = total;
-            document.getElementById('payment-qr').src = qrUrl;
-            document.getElementById('payment-box').classList.remove('hidden');
-            document.getElementById('payment-box').scrollIntoView({ behavior: 'smooth' });
+            renderMenuUI();
+            calculateTotals();
         }
 
-        function submitOrderToFirebase() {
+        function calculateTotals() {
+            let total = 0;
+            productsList.forEach(item => {
+                if(cartState[item.id]) total += (cartState[item.id] * item.price);
+            });
+            document.getElementById('ui-grand-total').innerText = total;
+            return total;
+        }
+
+        function submitParcelOrder() {
             const name = document.getElementById('cust-name').value.trim();
             const phone = document.getElementById('cust-phone').value.trim();
-            const timeSlot = document.getElementById('cust-time').value;
-            const total = getGrandTotal();
+            const manualSlot = document.getElementById('cust-slot-manual').value.trim(); // Captured value
+            const total = calculateTotals();
 
-            if(!name || !phone || !timeSlot) {
-                alert("Please fill out your Name, Mobile, and Delivery Time Slot details.");
+            if(!name || !phone || !manualSlot) {
+                alert("Please complete Name, Mobile, and your Manual Time/Train details.");
                 return;
             }
 
-            let purchasedItems = [];
-            Object.keys(currentLiveMenu).forEach(id => {
-                if(cart[id] > 0) {
-                    purchasedItems.push(`${currentLiveMenu[id].name} (x${cart[id]})`);
-                }
+            let itemsSummaryParts = [];
+            productsList.forEach(i => {
+                if(cartState[i.id]) itemsSummaryParts.push(`${i.name} (${cartState[i.id]}x)`);
             });
 
-            const orderPayload = {
+            if(itemsSummaryParts.length === 0) {
+                alert("Your cart is currently empty!");
+                return;
+            }
+
+            const now = new Date();
+            const newOrder = {
                 customerName: name,
                 customerPhone: phone,
-                deliveryTimeSlot: timeSlot,
-                itemsSummary: purchasedItems.join(', '),
+                deliveryTimeSlot: manualSlot, // Written explicitly to the Firebase reference key
+                itemsSummary: itemsSummaryParts.join(", "),
                 grandTotal: total,
-                status: "Received", 
-                paymentVerified: false, 
-                timestamp: firebase.database.ServerValue.TIMESTAMP,
-                dateStr: new Date().toLocaleDateString(),
-                timeStr: new Date().toLocaleTimeString()
+                status: "Received",
+                paymentVerified: false,
+                dateStr: now.toLocaleDateString('en-IN'),
+                timeStr: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
             };
 
-            db.ref('shiridi_orders').push(orderPayload)
+            db.ref('shiridi_orders').push(newOrder)
                 .then(() => {
-                    alert("Order submitted successfully to Kitchen! Redirecting to WhatsApp to send payment proof.");
-                    const waText = encodeURIComponent(`Hi Sai Krishna Caterers, I just placed a train parcel order for ₹${total}.\nName: ${name}\nDelivery: ${timeSlot}`);
-                    window.open(`https://wa.me/9154095125?text=${waText}`, '_blank');
-                    cancelEntireOrder(); 
+                    alert("🎉 Order Booked Successfully via Manual Routing!");
+                    cartState = {};
+                    document.getElementById('cust-name').value = '';
+                    document.getElementById('cust-phone').value = '';
+                    document.getElementById('cust-slot-manual').value = '';
+                    renderMenuUI();
+                    calculateTotals();
                 })
-                .catch(err => alert("Database Error: " + err.message));
+                .catch(err => alert("Database transmission issue: " + err.message));
         }
 
-        function cancelEntireOrder() {
-            cart = {};
-            document.getElementById('cust-name').value = '';
-            document.getElementById('cust-phone').value = '';
-            document.getElementById('cust-time').value = '';
-            document.getElementById('payment-box').classList.add('hidden');
-            renderMenuUI();
-        }
-
-        function shareAppLink() {
-            if (navigator.share) {
-                navigator.share({
-                    title: 'Sai Krishna Caterers',
-                    text: 'Order fresh take away train parcels from Shiridi!',
-                    url: window.location.href
-                }).catch(console.error);
-            } else {
-                navigator.clipboard.writeText(window.location.href);
-                alert("App link copied to your clipboard!");
-            }
-        }
+        // Initialize display configuration on document generation load
+        renderMenuUI();
     </script>
 </body>
 </html>
