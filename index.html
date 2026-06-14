@@ -39,7 +39,7 @@
             
             <div class="space-y-3">
                 <input type="text" id="cust-name" placeholder="Customer Name" class="w-full border border-gray-300 p-2.5 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-700">
-                <input type="tel" id="cust-phone" placeholder="Mobile Number (Enter for Sharing)" class="w-full border border-gray-300 p-2.5 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-700">
+                <input type="tel" id="cust-phone" placeholder="Mobile Number" class="w-full border border-gray-300 p-2.5 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-700">
                 
                 <div>
                     <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 px-1">Delivery Time / Train Info (Manual Entry)</label>
@@ -53,15 +53,54 @@
         </div>
     </div>
 
-    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 shadow-xl z-50">
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 shadow-xl z-40">
         <div class="max-w-md mx-auto flex justify-between items-center">
             <div>
                 <span class="text-xs font-bold text-gray-400 uppercase tracking-wider block">Total Amount</span>
                 <span class="text-xl font-black text-gray-900">₹<span id="ui-grand-total">0</span></span>
             </div>
-            <button onclick="submitParcelOrder()" class="bg-red-700 hover:bg-red-800 text-white font-extrabold text-sm px-6 py-3 rounded-xl shadow-md uppercase tracking-wider transition">
+            <button onclick="openPaymentModal()" class="bg-red-700 hover:bg-red-800 text-white font-extrabold text-sm px-6 py-3 rounded-xl shadow-md uppercase tracking-wider transition">
                 Place Order 🚀
             </button>
+        </div>
+    </div>
+
+    <div id="payment-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <div class="bg-red-700 text-white p-4 text-center">
+                <h3 class="font-black uppercase tracking-wider text-sm">Scan QR to Complete Payment</h3>
+                <p class="text-xs text-red-100 mt-1">Please pay exact amount & upload screenshot</p>
+            </div>
+
+            <div class="p-5 space-y-4 text-center">
+                <div class="bg-gray-50 py-3 rounded-xl border border-gray-100">
+                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider block">Amount To Pay</span>
+                    <span class="text-2xl font-black text-red-700">₹<span id="modal-grand-total">0</span></span>
+                </div>
+
+                <div class="flex justify-center my-2 p-2 bg-white border border-gray-200 rounded-2xl max-w-[200px] mx-auto shadow-inner">
+                    <img id="upi-qr-graphic" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=9154095125@ybl%26pn=Sai%20Krishna%20Caterers%26cu=INR" alt="Payment QR Code" class="w-full h-auto object-contain">
+                </div>
+                
+                <p class="text-[11px] font-bold text-gray-500 uppercase tracking-wide">Merchant UPI ID: <span class="text-gray-800 font-extrabold">9154095125@ybl</span></p>
+
+                <div class="text-left space-y-1">
+                    <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-wider px-1">Upload Payment Receipt Screenshot:</label>
+                    <div class="relative border-2 border-dashed border-gray-300 rounded-xl p-3 hover:border-red-500 transition bg-gray-50 text-center cursor-pointer">
+                        <input type="file" id="payment-screenshot-file" accept="image/*" onchange="handleFileSelectedLabel(this)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                        <span id="file-upload-placeholder" class="text-xs font-bold text-gray-600 block">📁 Click to Select Image From Gallery</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 pt-2">
+                    <button onclick="closePaymentModal()" class="border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs font-bold py-3 rounded-xl uppercase tracking-wider transition">
+                        Cancel
+                    </button>
+                    <button onclick="processFinalReceiptOrder()" class="bg-green-600 hover:bg-green-700 text-white text-xs font-extrabold py-3 rounded-xl uppercase tracking-wider transition shadow-md">
+                        👍 I Have Paid
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -81,8 +120,9 @@
 
         let globalProducts = [];
         let cartState = {};
+        let uploadedScreenshotBase64 = ""; // Holds base64 image data payload securely
 
-        // 1. TRACKING ON LOAD: Check if user arrived via a shared link
+        // On Load Tracking System Engine
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
             const refId = urlParams.get('ref');
@@ -96,19 +136,26 @@
             }
         };
 
-        // 2. SHARE LOGIC
+        // Refactored Smart Trackable Sharing Action Flow Configuration
         function shareApp() {
-            const phone = document.getElementById('cust-phone').value.trim();
+            let phoneField = document.getElementById('cust-phone');
+            let phone = phoneField.value.trim();
+            
+            // If empty, prompt gracefully via field action tracking popup alert instead of instant screen blocks
             if(!phone) {
-                alert("Please enter your Mobile Number first so your shared link can be tracked!");
-                return;
+                const userPhoneInput = prompt("Please enter your Mobile Number first so your shared link can be tracked successfully:");
+                if(userPhoneInput && userPhoneInput.trim()) {
+                    phone = userPhoneInput.trim();
+                    phoneField.value = phone; // sync into standard form row view mapping
+                } else {
+                    return; // exit safely
+                }
             }
             
             const shareUrl = window.location.origin + window.location.pathname + "?ref=" + phone;
             
             navigator.clipboard.writeText(shareUrl).then(() => {
-                alert("Link copied! Send this to your friends.");
-                // Log the share event
+                alert("✨ Tracking referral link copied successfully! Send this link to your friends to earn reward points.");
                 db.ref('app_shares').push({
                     referrer: phone,
                     timestamp: new Date().toISOString()
@@ -116,6 +163,7 @@
             });
         }
 
+        // Fetching structural menu data trees from firebase realtime node database
         db.ref('shiridi_menu').on('value', snapshot => {
             const data = snapshot.val() || {};
             globalProducts = [];
@@ -171,20 +219,76 @@
             return total;
         }
 
-        function submitParcelOrder() {
+        // Checkout Modal View Management Logic Modules
+        function openPaymentModal() {
             const name = document.getElementById('cust-name').value.trim();
             const phone = document.getElementById('cust-phone').value.trim();
             const manualSlot = document.getElementById('cust-slot-manual').value.trim();
             const total = calculateTotals();
 
-            if(!name || !phone || !manualSlot) { alert("Please fill in Name, Mobile, and Delivery Details."); return; }
+            if(!name || !phone || !manualSlot) { 
+                alert("Please fill in Name, Mobile Number, and Delivery details before placing an order."); 
+                return; 
+            }
+
+            let cartCount = 0;
+            globalProducts.forEach(i => { if(cartState[i.id]) cartCount += cartState[i.id]; });
+            if(cartCount === 0) { 
+                alert("Please add at least one item to your cart before checking out!"); 
+                return; 
+            }
+
+            // Bind values dynamically directly to display layers inside modal frame container inputs
+            document.getElementById('modal-grand-total').innerText = total;
+            
+            // Dynamic generation code update for payment URL QR targeting your corporate receiver credentials
+            const encodedUPIUrl = `upi://pay?pa=9154095125@ybl&pn=Sai%20Krishna%20Caterers&am=${total}&cu=INR`;
+            document.getElementById('upi-qr-graphic').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(encodedUPIUrl)}`;
+            
+            // Un-hide display viewport layers smoothly
+            document.getElementById('payment-modal').classList.remove('hidden');
+        }
+
+        function closePaymentModal() {
+            document.getElementById('payment-modal').classList.add('hidden');
+            // Flush uploaded state text file rows references
+            uploadedScreenshotBase64 = "";
+            document.getElementById('payment-screenshot-file').value = "";
+            document.getElementById('file-upload-placeholder').innerText = "📁 Click to Select Image From Gallery";
+        }
+
+        // Image Stream Handler convertor logic tracking engine
+        function handleFileSelectedLabel(inputElement) {
+            if (inputElement.files && inputElement.files[0]) {
+                const selectedFile = inputElement.files[0];
+                document.getElementById('file-upload-placeholder').innerText = `✅ Selected: ${selectedFile.name.substring(0, 20)}...`;
+                
+                // Read and compress image stream dynamically down to standard compact base64 strings securely
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    uploadedScreenshotBase64 = e.target.result;
+                };
+                reader.readAsDataURL(selectedFile);
+            }
+        }
+
+        // Finalize transaction execution order pushing arrays into firebase streams database target trees
+        function processFinalReceiptOrder() {
+            const name = document.getElementById('cust-name').value.trim();
+            const phone = document.getElementById('cust-phone').value.trim();
+            const manualSlot = document.getElementById('cust-slot-manual').value.trim();
+            const total = calculateTotals();
+
+            if(!uploadedScreenshotBase64) {
+                alert("Please upload your payment transaction receipt screenshot from your gallery to verify payment!");
+                return;
+            }
+
             let itemsSummaryParts = [];
             globalProducts.forEach(i => { if(cartState[i.id]) itemsSummaryParts.push(`${i.name} (${cartState[i.id]}x)`); });
 
-            if(itemsSummaryParts.length === 0) { alert("Please add at least one item to your cart!"); return; }
-
             const now = new Date();
-            const newOrder = {
+            const finalProcessedOrder = {
                 customerName: name,
                 customerPhone: phone,
                 deliveryTimeSlot: manualSlot,
@@ -192,13 +296,17 @@
                 grandTotal: total,
                 status: "Received",
                 paymentVerified: false,
+                receiptScreenshot: uploadedScreenshotBase64, // stores the receipt screenshot context image natively
                 dateStr: now.toLocaleDateString('en-IN'),
                 timeStr: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
             };
 
-            db.ref('shiridi_orders').push(newOrder)
+            db.ref('shiridi_orders').push(finalProcessedOrder)
                 .then(() => {
-                    alert("🎉 Order Booked Successfully!");
+                    alert("🎉 Order Booked Successfully! Payment proof submitted for validation review.");
+                    closePaymentModal();
+                    
+                    // Clear inputs states rows grids context details fields
                     cartState = {};
                     document.getElementById('cust-name').value = '';
                     document.getElementById('cust-phone').value = '';
