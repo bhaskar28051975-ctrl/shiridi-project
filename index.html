@@ -16,9 +16,11 @@
                 <h1 class="text-xl font-black tracking-tight uppercase">Sai Krishna Caterers</h1>
                 <p class="text-[10px] text-red-100 uppercase tracking-widest font-semibold mt-0.5">Shirdi Train Delivery Service</p>
             </div>
-            <button onclick="window.location.reload()" class="bg-white/10 hover:bg-white/20 text-white font-bold text-xs px-3 py-1.5 rounded-lg tracking-wider uppercase border border-white/20">
-                Refresh
-            </button>
+            <div class="flex gap-2">
+                <button onclick="window.location.reload()" class="bg-white/10 hover:bg-white/20 text-white font-bold text-xs px-3 py-1.5 rounded-lg tracking-wider uppercase border border-white/20">
+                    Refresh
+                </button>
+            </div>
         </div>
     </div>
 
@@ -37,13 +39,17 @@
             
             <div class="space-y-3">
                 <input type="text" id="cust-name" placeholder="Customer Name" class="w-full border border-gray-300 p-2.5 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-700">
-                <input type="tel" id="cust-phone" placeholder="Mobile Number" class="w-full border border-gray-300 p-2.5 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-700">
+                <input type="tel" id="cust-phone" placeholder="Mobile Number (Enter for Sharing)" class="w-full border border-gray-300 p-2.5 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-700">
                 
                 <div>
                     <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 px-1">Delivery Time / Train Info (Manual Entry)</label>
                     <input type="text" id="cust-slot-manual" placeholder="e.g., Coach S4 - 12:40 PM" class="w-full border border-gray-300 p-2.5 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-700 bg-gray-50">
                 </div>
             </div>
+
+            <button onclick="shareApp()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold text-sm py-3 rounded-xl shadow-md uppercase tracking-wider transition">
+                Share My Link & Earn Points 🔗
+            </button>
         </div>
     </div>
 
@@ -60,7 +66,6 @@
     </div>
 
     <script>
-        // Exact matching config from your snippet
         const firebaseConfig = {
             apiKey: "AIzaSyBjG-vnr8B4-tQpPyflqdY99OBvLuZRkoc",
             authDomain: "shirdi-project.firebaseapp.com",
@@ -77,11 +82,43 @@
         let globalProducts = [];
         let cartState = {};
 
-        // ALIGNED: Listens directly to the correct 'shiridi_menu' node
+        // 1. TRACKING ON LOAD: Check if user arrived via a shared link
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const refId = urlParams.get('ref');
+            
+            if (refId) {
+                db.ref('app_clicks').push({
+                    referrer: refId,
+                    timestamp: new Date().toISOString(),
+                    page: window.location.pathname
+                });
+            }
+        };
+
+        // 2. SHARE LOGIC
+        function shareApp() {
+            const phone = document.getElementById('cust-phone').value.trim();
+            if(!phone) {
+                alert("Please enter your Mobile Number first so your shared link can be tracked!");
+                return;
+            }
+            
+            const shareUrl = window.location.origin + window.location.pathname + "?ref=" + phone;
+            
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                alert("Link copied! Send this to your friends.");
+                // Log the share event
+                db.ref('app_shares').push({
+                    referrer: phone,
+                    timestamp: new Date().toISOString()
+                });
+            });
+        }
+
         db.ref('shiridi_menu').on('value', snapshot => {
             const data = snapshot.val() || {};
             globalProducts = [];
-            
             Object.keys(data).forEach(key => {
                 const item = data[key];
                 globalProducts.push({
@@ -91,26 +128,16 @@
                     img: item.image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400"
                 });
             });
-
             renderMenuUI();
             calculateTotals();
         });
 
-        // Generates UI side-by-side card items using Tailwind multi-column layouts
         function renderMenuUI() {
             const container = document.getElementById('menu-container');
             container.innerHTML = '';
-
-            if (globalProducts.length === 0) {
-                container.innerHTML = `<p class="col-span-2 text-center text-sm text-gray-500 py-8">No food items added yet. Please add some via your Admin panel dashboard!</p>`;
-                return;
-            }
-
             globalProducts.forEach(item => {
                 const qty = cartState[item.id] || 0;
                 const card = document.createElement('div');
-                
-                // Native mobile look grid card item frames
                 card.className = "bg-white border border-gray-200 rounded-3xl p-4 flex flex-col items-center justify-between text-center relative shadow-sm hover:border-red-200 transition";
                 card.innerHTML = `
                     <div class="h-28 w-full flex items-center justify-center mb-2">
@@ -118,7 +145,6 @@
                     </div>
                     <h3 class="text-xs font-extrabold text-gray-800 line-clamp-2 px-1 mb-1">${item.name}</h3>
                     <p class="text-sm font-black text-red-700 mb-3">₹${item.price}</p>
-                    
                     <div class="flex items-center justify-between w-full max-w-[105px] bg-gray-50 p-1 rounded-full border border-gray-100">
                         <button onclick="adjustQty('${item.id}', -1)" class="w-7 h-7 rounded-full bg-white text-red-700 border border-gray-200 font-black flex items-center justify-center shadow-sm text-sm select-none hover:bg-gray-100">-</button>
                         <span class="font-black text-xs text-gray-800">${qty}</span>
@@ -134,16 +160,13 @@
             const updated = current + change;
             if (updated <= 0) delete cartState[id];
             else cartState[id] = updated;
-            
             renderMenuUI();
             calculateTotals();
         }
 
         function calculateTotals() {
             let total = 0;
-            globalProducts.forEach(item => {
-                if(cartState[item.id]) total += (cartState[item.id] * item.price);
-            });
+            globalProducts.forEach(item => { if(cartState[item.id]) total += (cartState[item.id] * item.price); });
             document.getElementById('ui-grand-total').innerText = total;
             return total;
         }
@@ -154,20 +177,11 @@
             const manualSlot = document.getElementById('cust-slot-manual').value.trim();
             const total = calculateTotals();
 
-            if(!name || !phone || !manualSlot) {
-                alert("Please fill in Name, Mobile, and Delivery Details.");
-                return;
-            }
-
+            if(!name || !phone || !manualSlot) { alert("Please fill in Name, Mobile, and Delivery Details."); return; }
             let itemsSummaryParts = [];
-            globalProducts.forEach(i => {
-                if(cartState[i.id]) itemsSummaryParts.push(`${i.name} (${cartState[i.id]}x)`);
-            });
+            globalProducts.forEach(i => { if(cartState[i.id]) itemsSummaryParts.push(`${i.name} (${cartState[i.id]}x)`); });
 
-            if(itemsSummaryParts.length === 0) {
-                alert("Please add at least one item to your cart before checking out!");
-                return;
-            }
+            if(itemsSummaryParts.length === 0) { alert("Please add at least one item to your cart!"); return; }
 
             const now = new Date();
             const newOrder = {
