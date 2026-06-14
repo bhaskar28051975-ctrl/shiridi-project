@@ -11,17 +11,25 @@
 <body class="bg-gray-50 text-gray-900 min-h-screen p-4 font-sans print:bg-white print:p-0">
 
     <div class="max-w-5xl mx-auto">
+        <!-- Header Banner -->
         <div class="bg-red-700 text-white p-5 rounded-xl shadow-md mb-6 flex flex-col sm:flex-row justify-between items-center gap-4 print:border print:border-gray-300 print:text-black print:bg-white print:shadow-none">
             <div>
                 <h1 class="text-2xl font-extrabold tracking-tight">Sai Krishna Caterers</h1>
                 <p class="text-xs text-red-100 uppercase tracking-widest font-semibold mt-0.5 print:text-gray-600">Sales & Revenue Reports Dashboard</p>
             </div>
-            <button onclick="window.print()" class="bg-white text-red-700 hover:bg-gray-100 font-bold text-xs px-4 py-2 rounded-lg transition shadow-sm uppercase tracking-wider print:hidden">
-                🖨️ Print Records
-            </button>
+            <div class="flex gap-2 print:hidden">
+                <button onclick="resetAllReports()" class="bg-red-900/50 hover:bg-red-900 text-red-100 font-bold text-xs px-4 py-2 rounded-lg transition border border-red-500/30 uppercase tracking-wider">
+                    🔄 Reset Dashboard (0)
+                </button>
+                <button onclick="window.print()" class="bg-white text-red-700 hover:bg-gray-100 font-bold text-xs px-4 py-2 rounded-lg transition shadow-sm uppercase tracking-wider">
+                    🖨️ Print Records
+                </button>
+            </div>
         </div>
 
+        <!-- Filter Control Station Block -->
         <div class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm mb-6 flex flex-col sm:flex-row justify-between items-center gap-4 print:hidden">
+            <!-- Filter Window Tabs -->
             <div class="flex bg-gray-100 p-1 rounded-xl w-full sm:w-auto">
                 <button onclick="setReportRange('daily')" id="tab-daily" class="flex-1 sm:flex-none text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-lg transition-all text-gray-500 hover:text-gray-900">Daily</button>
                 <button onclick="setReportRange('weekly')" id="tab-weekly" class="flex-1 sm:flex-none text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-lg transition-all text-gray-500 hover:text-gray-900">Weekly</button>
@@ -29,27 +37,30 @@
                 <button onclick="setReportRange('all')" id="tab-all" class="flex-1 sm:flex-none text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-lg transition-all bg-white text-red-700 shadow-sm">All Time</button>
             </div>
 
+            <!-- Main Interactive Calendar Reference Field Input -->
             <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
                 <label class="text-xs font-bold uppercase tracking-wider text-gray-500 whitespace-nowrap">Target Date:</label>
                 <input type="date" id="report-date-picker" onchange="handleDateSelection()" class="border border-gray-300 p-2 rounded-xl text-xs font-bold uppercase text-gray-700 focus:outline-none focus:border-red-700 bg-gray-50">
             </div>
         </div>
 
+        <!-- Metrics Overview Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
             <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                <span class="block text-xs font-bold text-gray-500 uppercase tracking-wider">Total Revenue</span>
+                <span class="block text-xs font-bold text-gray-500 uppercase tracking-wider" id="revenue-label">Total Revenue</span>
                 <span class="text-2xl font-black text-red-700 mt-1 block">₹<span id="report-revenue">0</span></span>
             </div>
             <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                <span class="block text-xs font-bold text-gray-500 uppercase tracking-wider">Dispatched Orders</span>
+                <span class="block text-xs font-bold text-gray-500 uppercase tracking-wider" id="dispatched-label">Dispatched Orders</span>
                 <span id="report-completed-count" class="text-2xl font-black text-gray-800 mt-1 block">0</span>
             </div>
             <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                <span class="block text-xs font-bold text-gray-500 uppercase tracking-wider">Active In Kitchen</span>
+                <span class="block text-xs font-bold text-gray-500 uppercase tracking-wider" id="active-label">Active In Kitchen</span>
                 <span id="report-active-count" class="text-2xl font-black text-amber-600 mt-1 block">0</span>
             </div>
         </div>
 
+        <!-- Item Breakdown Summary Card -->
         <div class="bg-white rounded-xl border border-gray-200 shadow-sm mb-6 p-5">
             <h3 class="text-xs font-black uppercase text-red-700 tracking-wider border-b pb-3 mb-4">📦 Top Food Items Sold Breakdown (In Selected Window)</h3>
             <div id="item-breakdown-container" class="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -57,6 +68,7 @@
             </div>
         </div>
 
+        <!-- Detailed Orders Log Table -->
         <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             <div class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
                 <h2 class="text-sm font-extrabold uppercase text-gray-800 tracking-wider">📋 Order Log Records (<span id="window-title-display">All Time</span>)</h2>
@@ -150,6 +162,10 @@
 
             orderKeys.forEach(key => {
                 const order = masterOrdersList[key];
+                
+                // Security check: Ignore corrupt database rows or non-order logs
+                if(!order || !order.customerName || !order.itemsSummary) return;
+
                 let orderDate = parseOrderDate(order.dateStr);
                 if(!orderDate) return; 
 
@@ -217,7 +233,19 @@
                 tableBody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-400 font-medium">No order history available inside this selected filters window scope.</td></tr>`;
             }
 
-            document.getElementById('window-title-display').innerText = currentRangeMode.toUpperCase() + (currentRangeMode !== 'all' ? ` : ${selectedDateValue}` : '');
+            // Clean context text tracking updates based on chosen filter values
+            let windowLabel = "All Time";
+            if (currentRangeMode === "daily") windowLabel = "Today (" + selectedDateValue + ")";
+            if (currentRangeMode === "weekly") windowLabel = "Weekly Window";
+            if (currentRangeMode === "monthly") {
+                const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+                windowLabel = monthNames[targetDate.getMonth()] + " " + targetDate.getFullYear();
+            }
+
+            document.getElementById('window-title-display').innerText = windowLabel;
+            document.getElementById('revenue-label').innerText = "Revenue (" + currentRangeMode.toUpperCase() + ")";
+            document.getElementById('dispatched-label').innerText = "Dispatched (" + currentRangeMode.toUpperCase() + ")";
+            document.getElementById('active-label').innerText = "Active (" + currentRangeMode.toUpperCase() + ")";
             
             updateSummaryMetrics(totalRevenue, completedCount, activeCount);
             renderItemBreakdownUI(itemQuantitiesBreakdown);
@@ -241,17 +269,22 @@
         }
 
         function parseAndAggregateItems(summaryStr, breakdownObj) {
-            if (!summaryStr) return;
+            if (!summaryStr || typeof summaryStr !== 'string') return;
             const parts = summaryStr.split(',');
             parts.forEach(part => {
                 let match = part.match(/(.+)\((\d+)x\)/);
                 if (match) {
                     let itemName = match[1].trim();
                     let qty = parseInt(match[2]);
-                    breakdownObj[itemName] = (breakdownObj[itemName] || 0) + qty;
+                    // Only process true clean item strings
+                    if(itemName && itemName !== 'undefined' && itemName !== 'null') {
+                        breakdownObj[itemName] = (breakdownObj[itemName] || 0) + qty;
+                    }
                 } else {
                     let cleanName = part.trim();
-                    if(cleanName) breakdownObj[cleanName] = (breakdownObj[cleanName] || 0) + 1;
+                    if(cleanName && cleanName !== 'undefined' && cleanName !== 'null') {
+                        breakdownObj[cleanName] = (breakdownObj[cleanName] || 0) + 1;
+                    }
                 }
             });
         }
@@ -282,6 +315,20 @@
             document.getElementById('report-revenue').innerText = revenue.toLocaleString('en-IN');
             document.getElementById('report-completed-count').innerText = completed;
             document.getElementById('report-active-count').innerText = active;
+        }
+
+        // Administrative reset script to completely clear nodes back down to zero safely
+        function resetAllReports() {
+            const confirmation = confirm("⚠️ Are you absolutely sure you want to clear your database order history? This will permanently drop all metrics back to zero.");
+            if(confirmation) {
+                db.ref('shiridi_orders').set(null)
+                    .then(() => {
+                        alert("🧼 Log database cleared successfully! All metrics reset to 0.");
+                    })
+                    .catch(err => {
+                        alert("Error resetting database: " + err.message);
+                    });
+            }
         }
     </script>
 </body>
