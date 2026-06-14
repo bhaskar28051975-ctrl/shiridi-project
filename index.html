@@ -35,15 +35,15 @@
         <!-- Category Title Group Layout -->
         <div class="flex items-center gap-3 mb-6">
             <div class="w-1.5 h-8 bg-red-600 rounded-full"></div>
-            <h2 class="text-2xl font-black uppercase text-slate-800 tracking-wide italic">COOL DRINKS</h2>
+            <h2 class="text-2xl font-black uppercase text-slate-800 tracking-wide italic">OUR MENU</h2>
         </div>
 
-        <!-- Dynamic Menu Grid matching Screenshot_20260614-144704.png -->
+        <!-- Dynamic Live Menu Grid: Displays items Side-by-Side -->
         <div id="menu-container" class="grid grid-cols-2 gap-4">
-            <!-- Items populate dynamically below -->
+            <p class="col-span-2 text-center text-sm text-gray-400 py-8">Loading fresh menu items from database...</p>
         </div>
 
-        <!-- Checkout Section (With Manual Delivery Time Entry) -->
+        <!-- Checkout Section (With Manual Delivery Entry) -->
         <div class="mt-8 bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-4">
             <h3 class="text-sm font-black uppercase text-red-600 tracking-wider border-b pb-2">Customer & Train Details</h3>
             
@@ -51,9 +51,9 @@
                 <input type="text" id="cust-name" placeholder="Customer Name" class="w-full border border-gray-300 p-2.5 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-500">
                 <input type="tel" id="cust-phone" placeholder="Mobile Number" class="w-full border border-gray-300 p-2.5 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-500">
                 
-                <!-- Manual Slot Entry System replacing the Dropdown Menu -->
+                <!-- Manual Slot Entry System -->
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 px-1">Delivery Time / Train Schedule (Manual)</label>
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 px-1">Delivery Time / Train Schedule (Manual Entry)</label>
                     <input type="text" id="cust-slot-manual" placeholder="e.g., 04:30 PM or Train 12626 Coach S4" class="w-full border border-gray-300 p-2.5 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-500 bg-gray-50">
                 </div>
             </div>
@@ -87,39 +87,57 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Sample Inventory Data mirroring product configurations
-        const productsList = [
-            { id: "p1", name: "Sprit 250 ml", price: 26, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=400" },
-            { id: "p2", name: "Coca cola 250ml", price: 26, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=400", badge: "PACK OF 28" },
-            { id: "p3", name: "Fanta 250ml", price: 26, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=400" },
-            { id: "p4", name: "Thumbs up 250ml", price: 26, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=400" }
-        ];
+        let globalProducts = []; // Stores products fetched from admin panel
+        let cartState = {};      // Stores quantities ordered by user
 
-        let cartState = {};
+        // Realtime Listener: Fetches the items added inside admin.html
+        db.ref('shiridi_products').on('value', snapshot => {
+            const data = snapshot.val() || {};
+            globalProducts = [];
+            
+            // Loop through data keys coming from admin entry logs
+            Object.keys(data).forEach(key => {
+                globalProducts.push({
+                    id: key,
+                    name: data[key].name || data[key].itemName,
+                    price: Number(data[key].price || data[key].itemPrice || 0),
+                    img: data[key].image || data[key].itemImage || "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=400",
+                    badge: data[key].badge || ""
+                });
+            });
 
+            renderMenuUI();
+            calculateTotals();
+        });
+
+        // Renders items side-by-side mirroring Screenshot_20260614-144704.png
         function renderMenuUI() {
             const container = document.getElementById('menu-container');
             container.innerHTML = '';
 
-            productsList.forEach(item => {
+            if (globalProducts.length === 0) {
+                container.innerHTML = `<p class="col-span-2 text-center text-sm text-gray-500 py-8">No products found. Please add products using admin.html!</p>`;
+                return;
+            }
+
+            globalProducts.forEach(item => {
                 const qty = cartState[item.id] || 0;
                 const card = document.createElement('div');
                 
-                // Matches the visual layout structure seen in Screenshot_20260614-144704.png
-                card.className = "bg-white border border-gray-200 rounded-3xl p-4 flex flex-col items-center justify-between text-center relative shadow-sm";
+                card.className = "bg-white border border-gray-200 rounded-3xl p-4 flex flex-col items-center justify-between text-center relative shadow-sm hover:border-red-200 transition";
                 card.innerHTML = `
-                    ${item.badge ? `<span class="absolute top-2 left-2 bg-blue-600 text-white text-[8px] font-black px-1.5 py-1 rounded-md shadow-sm line-clamp-1">⭐ ${item.badge}</span>` : ''}
+                    ${item.badge ? `<span class="absolute top-2 left-2 bg-blue-600 text-white text-[8px] font-black px-1.5 py-1 rounded-md shadow-sm uppercase tracking-tighter">⭐ ${item.badge}</span>` : ''}
                     <div class="h-32 w-full flex items-center justify-center mb-3">
                         <img src="${item.img}" alt="${item.name}" class="max-h-full max-w-full object-contain rounded-xl">
                     </div>
                     <h3 class="text-xs font-extrabold text-slate-800 line-clamp-2 px-1 mb-1">${item.name}</h3>
                     <p class="text-sm font-black text-red-600 mb-3">₹${item.price}</p>
                     
-                    <!-- App Styled Rounded Stepper Controls -->
+                    <!-- Premium Rounded Counter Bar Layout -->
                     <div class="flex items-center justify-between w-full max-w-[110px] bg-gray-50/80 p-1 rounded-full border border-gray-100">
-                        <button onclick="adjustQty('${item.id}', -1)" class="w-8 h-8 rounded-full bg-red-50 text-red-600 font-black flex items-center justify-center shadow-sm text-base focus:outline-none select-none hover:bg-red-100">-</button>
+                        <button onclick="adjustQty('${item.id}', -1)" class="w-8 h-8 rounded-full bg-red-50 text-red-600 font-black flex items-center justify-center shadow-sm text-base select-none hover:bg-red-100">-</button>
                         <span class="font-black text-sm text-slate-800">${qty}</span>
-                        <button onclick="adjustQty('${item.id}', 1)" class="w-8 h-8 rounded-full bg-red-600 text-white font-black flex items-center justify-center shadow-md text-base focus:outline-none select-none hover:bg-red-700">+</button>
+                        <button onclick="adjustQty('${item.id}', 1)" class="w-8 h-8 rounded-full bg-red-600 text-white font-black flex items-center justify-center shadow-md text-base select-none hover:bg-red-700">+</button>
                     </div>
                 `;
                 container.appendChild(card);
@@ -138,7 +156,7 @@
 
         function calculateTotals() {
             let total = 0;
-            productsList.forEach(item => {
+            globalProducts.forEach(item => {
                 if(cartState[item.id]) total += (cartState[item.id] * item.price);
             });
             document.getElementById('ui-grand-total').innerText = total;
@@ -148,7 +166,7 @@
         function submitParcelOrder() {
             const name = document.getElementById('cust-name').value.trim();
             const phone = document.getElementById('cust-phone').value.trim();
-            const manualSlot = document.getElementById('cust-slot-manual').value.trim(); // Captured value
+            const manualSlot = document.getElementById('cust-slot-manual').value.trim();
             const total = calculateTotals();
 
             if(!name || !phone || !manualSlot) {
@@ -157,7 +175,7 @@
             }
 
             let itemsSummaryParts = [];
-            productsList.forEach(i => {
+            globalProducts.forEach(i => {
                 if(cartState[i.id]) itemsSummaryParts.push(`${i.name} (${cartState[i.id]}x)`);
             });
 
@@ -170,7 +188,7 @@
             const newOrder = {
                 customerName: name,
                 customerPhone: phone,
-                deliveryTimeSlot: manualSlot, // Written explicitly to the Firebase reference key
+                deliveryTimeSlot: manualSlot,
                 itemsSummary: itemsSummaryParts.join(", "),
                 grandTotal: total,
                 status: "Received",
@@ -181,7 +199,7 @@
 
             db.ref('shiridi_orders').push(newOrder)
                 .then(() => {
-                    alert("🎉 Order Booked Successfully via Manual Routing!");
+                    alert("🎉 Order Booked Successfully!");
                     cartState = {};
                     document.getElementById('cust-name').value = '';
                     document.getElementById('cust-phone').value = '';
@@ -189,11 +207,8 @@
                     renderMenuUI();
                     calculateTotals();
                 })
-                .catch(err => alert("Database transmission issue: " + err.message));
+                .catch(err => alert("Error transmitting data: " + err.message));
         }
-
-        // Initialize display configuration on document generation load
-        renderMenuUI();
     </script>
 </body>
 </html>
