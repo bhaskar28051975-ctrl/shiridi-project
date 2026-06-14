@@ -3,64 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reports & Insights - Shiridi Project</title>
+    <title>Sales Reports - Shirdi Project</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
-    <style>
-        body { background-color: #7f1d1d; }
-    </style>
 </head>
-<body class="text-white min-h-screen p-4 font-sans">
+<body class="bg-gray-50 text-gray-900 min-h-screen p-4 font-sans">
 
     <div class="max-w-5xl mx-auto">
-        <div class="bg-red-950 rounded-2xl p-6 border border-red-800 shadow-2xl mb-6">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                <div>
-                    <h1 class="text-3xl font-extrabold tracking-tight">Sales & Analytics Ledger</h1>
-                    <p class="text-red-300 text-sm">Sai Krishna Caterers — Realtime Database Reports</p>
-                </div>
-                <button onclick="fetchReportsAndAggregate()" class="bg-red-800 hover:bg-red-700 font-bold px-4 py-2 rounded-lg text-sm transition">
-                    🔄 Refresh System Data
-                </button>
+        <!-- Header Banner: Matching Deep Red Style -->
+        <div class="bg-red-700 text-white p-5 rounded-xl shadow-md mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-2xl font-extrabold tracking-tight">Sai Krishna Caterers</h1>
+                <p class="text-xs text-red-100 uppercase tracking-widest font-semibold mt-0.5">Sales & Revenue Reports Dashboard</p>
             </div>
+            <button onclick="window.print()" class="bg-white text-red-700 hover:bg-gray-100 font-bold text-xs px-4 py-2 rounded-lg transition shadow-sm uppercase tracking-wider">
+                🖨️ Print Records
+            </button>
+        </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="bg-red-900/60 p-4 rounded-xl border border-red-800 text-center">
-                    <p class="text-xs uppercase text-gray-400 font-bold tracking-wider">Total Orders Cleared</p>
-                    <span id="metric-count" class="text-4xl font-extrabold text-white">0</span>
-                </div>
-                <div class="bg-red-900/60 p-4 rounded-xl border border-red-800 text-center">
-                    <p class="text-xs uppercase text-gray-400 font-bold tracking-wider">Grand Total Revenue</p>
-                    <span class="text-4xl font-extrabold text-yellow-400">₹<span id="metric-revenue">0</span></span>
-                </div>
+        <!-- Metrics Overview Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                <span class="block text-xs font-bold text-gray-500 uppercase tracking-wider">Total Revenue</span>
+                <span class="text-2xl font-black text-red-700 mt-1 block">₹<span id="report-revenue">0</span></span>
+            </div>
+            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                <span class="block text-xs font-bold text-gray-500 uppercase tracking-wider">Dispatched Orders</span>
+                <span id="report-completed-count" class="text-2xl font-black text-gray-800 mt-1 block">0</span>
+            </div>
+            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                <span class="block text-xs font-bold text-gray-500 uppercase tracking-wider">Active In Kitchen</span>
+                <span id="report-active-count" class="text-2xl font-black text-amber-600 mt-1 block">0</span>
             </div>
         </div>
 
-        <div class="bg-red-950/40 rounded-2xl p-4 border border-red-800">
-            <h2 class="text-lg font-bold mb-4 border-b border-red-800 pb-2">Chronological Sales Breakdown</h2>
+        <!-- Detailed Orders Log Table -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div class="p-4 border-b border-gray-200 bg-gray-50">
+                <h2 class="text-sm font-extrabold uppercase text-gray-800 tracking-wider">📋 Master Order History Log</h2>
+            </div>
             <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm text-gray-200">
-                    <thead class="bg-red-950 uppercase text-xs font-bold text-yellow-400 border-b border-red-800">
-                        <tr>
-                            <th class="p-3">Date/Time</th>
-                            <th class="p-3">Customer Info</th>
-                            <th class="p-3">Items Summary List</th>
-                            <th class="p-3 text-right">Amount Sold</th>
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead>
+                        <tr class="bg-gray-100 border-b border-gray-200 text-xs font-bold text-gray-600 uppercase tracking-wider">
+                            <th class="p-4">Date/Time</th>
+                            <th class="p-4">Customer Details</th>
+                            <th class="p-4">Time Slot</th>
+                            <th class="p-4">Items Ordered</th>
+                            <th class="p-4 text-right">Amount</th>
+                            <th class="p-4 text-center">Status</th>
                         </tr>
                     </thead>
-                    <tbody id="report-table-body" class="divide-y divide-red-900/50">
-                        </tbody>
+                    <tbody id="report-table-body" class="divide-y divide-gray-200 text-gray-700">
+                        <tr>
+                            <td colspan="6" class="p-8 text-center text-gray-400">Loading database summaries...</td>
+                        </tr>
+                    </tbody>
                 </table>
-                <div id="empty-state" class="text-center py-8 text-gray-400 font-semibold hidden">
-                    No orders recorded in database yet.
-                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Updated with your authentic shirdi-project configurations
         const firebaseConfig = {
             apiKey: "AIzaSyBjG-vnr8B4-tQpPyflqdY99OBvLuZRkoc",
             authDomain: "shirdi-project.firebaseapp.com",
@@ -74,60 +79,74 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        function fetchReportsAndAggregate() {
-            db.ref('shiridi_orders').once('value', snapshot => {
-                const data = snapshot.val();
-                const tbody = document.getElementById('report-table-body');
-                tbody.innerHTML = '';
+        db.ref('shiridi_orders').on('value', snapshot => {
+            const orders = snapshot.val() || {};
+            const tableBody = document.getElementById('report-table-body');
+            tableBody.innerHTML = '';
 
-                let runningTotalVolume = 0;
-                let runningCount = 0;
+            let totalRevenue = 0;
+            let completedCount = 0;
+            let activeCount = 0;
 
-                if (!data) {
-                    document.getElementById('metric-count').innerText = "0";
-                    document.getElementById('metric-revenue').innerText = "0";
-                    document.getElementById('empty-state').classList.remove('hidden');
-                    return;
+            const orderKeys = Object.keys(orders).reverse(); // Newest records on top
+
+            if(orderKeys.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-400 font-medium">No order history available inside the database.</td></tr>`;
+                updateSummary(0, 0, 0);
+                return;
+            }
+
+            orderKeys.forEach(key => {
+                const order = orders[key];
+                const amount = Number(order.grandTotal || 0);
+
+                if(order.status === "Completed") {
+                    completedCount++;
+                    totalRevenue += amount;
+                } else if(order.status === "Received") {
+                    activeCount++;
                 }
 
-                document.getElementById('empty-state').classList.add('hidden');
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 transition";
+                
+                let statusBadge = order.status === 'Completed' 
+                    ? `<span class="bg-green-50 text-green-700 border border-green-200 text-[11px] font-bold px-2 py-0.5 rounded-full uppercase">Dispatched</span>`
+                    : `<span class="bg-amber-50 text-amber-700 border border-amber-200 text-[11px] font-bold px-2 py-0.5 rounded-full uppercase">Pending</span>`;
 
-                const sortedKeys = Object.keys(data).sort((a, b) => {
-                    return (data[b].timestamp || 0) - (data[a].timestamp || 0);
-                });
-
-                sortedKeys.forEach(key => {
-                    const record = data[key];
-                    runningCount++;
-                    runningTotalVolume += Number(record.grandTotal || 0);
-
-                    const tr = document.createElement('tr');
-                    tr.className = "hover:bg-red-900/30 transition";
-                    tr.innerHTML = `
-                        <td class="p-3 font-mono text-xs whitespace-nowrap">
-                            <span class="block font-bold text-white">${record.dateStr || 'N/A'}</span>
-                            <span class="text-gray-400 text-[10px]">${record.timeStr || ''}</span>
-                        </td>
-                        <td class="p-3">
-                            <div class="font-bold text-yellow-400 text-xs">${record.customerName}</div>
-                            <div class="text-[11px] text-gray-400">${record.customerPhone}</div>
-                        </td>
-                        <td class="p-3 text-xs max-w-xs truncate" title="${record.itemsSummary}">
-                            ${record.itemsSummary || '—'}
-                        </td>
-                        <td class="p-3 text-right font-mono font-bold text-white whitespace-nowrap">
-                            ₹${record.grandTotal}
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-
-                document.getElementById('metric-count').innerText = runningCount;
-                document.getElementById('metric-revenue').innerText = runningTotalVolume;
+                tr.innerHTML = `
+                    <td class="p-4 whitespace-nowrap text-xs">
+                        <span class="block font-bold text-gray-900">${order.dateStr || ''}</span>
+                        <span class="text-gray-400 block text-[10px] mt-0.5">${order.timeStr || ''}</span>
+                    </td>
+                    <td class="p-4">
+                        <span class="block font-bold text-gray-900">${order.customerName}</span>
+                        <span class="text-gray-500 text-xs block mt-0.5">📞 ${order.customerPhone}</span>
+                    </td>
+                    <td class="p-4 font-semibold text-xs text-red-700 whitespace-nowrap">
+                        ${order.deliveryTimeSlot || 'Not Selected'}
+                    </td>
+                    <td class="p-4 text-xs font-medium max-w-xs break-words text-gray-600">
+                        ${order.itemsSummary}
+                    </td>
+                    <td class="p-4 text-right font-bold text-gray-900 whitespace-nowrap">
+                        ₹${amount}
+                    </td>
+                    <td class="p-4 text-center whitespace-nowrap">
+                        ${statusBadge}
+                    </td>
+                `;
+                tableBody.appendChild(tr);
             });
-        }
 
-        fetchReportsAndAggregate();
+            updateSummary(totalRevenue, completedCount, activeCount);
+        });
+
+        function updateSummary(revenue, completed, active) {
+            document.getElementById('report-revenue').innerText = revenue;
+            document.getElementById('report-completed-count').innerText = completed;
+            document.getElementById('report-active-count').innerText = active;
+        }
     </script>
 </body>
 </html>
