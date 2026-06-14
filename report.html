@@ -11,7 +11,6 @@
 <body class="bg-gray-50 text-gray-900 min-h-screen p-4 font-sans print:bg-white print:p-0">
 
     <div class="max-w-5xl mx-auto">
-        <!-- Header Banner -->
         <div class="bg-red-700 text-white p-5 rounded-xl shadow-md mb-6 flex flex-col sm:flex-row justify-between items-center gap-4 print:border print:border-gray-300 print:text-black print:bg-white print:shadow-none">
             <div>
                 <h1 class="text-2xl font-extrabold tracking-tight">Sai Krishna Caterers</h1>
@@ -22,9 +21,7 @@
             </button>
         </div>
 
-        <!-- Filter Control Station Block -->
         <div class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm mb-6 flex flex-col sm:flex-row justify-between items-center gap-4 print:hidden">
-            <!-- Filter Window Tabs -->
             <div class="flex bg-gray-100 p-1 rounded-xl w-full sm:w-auto">
                 <button onclick="setReportRange('daily')" id="tab-daily" class="flex-1 sm:flex-none text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-lg transition-all text-gray-500 hover:text-gray-900">Daily</button>
                 <button onclick="setReportRange('weekly')" id="tab-weekly" class="flex-1 sm:flex-none text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-lg transition-all text-gray-500 hover:text-gray-900">Weekly</button>
@@ -32,14 +29,12 @@
                 <button onclick="setReportRange('all')" id="tab-all" class="flex-1 sm:flex-none text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-lg transition-all bg-white text-red-700 shadow-sm">All Time</button>
             </div>
 
-            <!-- Main Interactive Calendar Reference Field Input -->
             <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
                 <label class="text-xs font-bold uppercase tracking-wider text-gray-500 whitespace-nowrap">Target Date:</label>
                 <input type="date" id="report-date-picker" onchange="handleDateSelection()" class="border border-gray-300 p-2 rounded-xl text-xs font-bold uppercase text-gray-700 focus:outline-none focus:border-red-700 bg-gray-50">
             </div>
         </div>
 
-        <!-- Metrics Overview Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
             <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
                 <span class="block text-xs font-bold text-gray-500 uppercase tracking-wider">Total Revenue</span>
@@ -55,16 +50,13 @@
             </div>
         </div>
 
-        <!-- Item Breakdown Summary Card -->
         <div class="bg-white rounded-xl border border-gray-200 shadow-sm mb-6 p-5">
             <h3 class="text-xs font-black uppercase text-red-700 tracking-wider border-b pb-3 mb-4">📦 Top Food Items Sold Breakdown (In Selected Window)</h3>
             <div id="item-breakdown-container" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <!-- Items analytics loaded via engine scripts -->
                 <p class="col-span-4 text-center text-xs text-gray-400 py-2">No item metrics compiled for this selection window frame.</p>
             </div>
         </div>
 
-        <!-- Detailed Orders Log Table -->
         <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             <div class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
                 <h2 class="text-sm font-extrabold uppercase text-gray-800 tracking-wider">📋 Order Log Records (<span id="window-title-display">All Time</span>)</h2>
@@ -106,9 +98,8 @@
         const db = firebase.database();
 
         let masterOrdersList = {};
-        let currentRangeMode = "all"; // Options: 'daily', 'weekly', 'monthly', 'all'
+        let currentRangeMode = "all";
         
-        // Auto-set HTML input element today value
         const today = new Date();
         document.getElementById('report-date-picker').value = today.toISOString().split('T')[0];
 
@@ -118,7 +109,6 @@
         });
 
         function handleDateSelection() {
-            // When user picks custom date, default focus view to that frame window
             if(currentRangeMode === "all") {
                 currentRangeMode = "daily";
             }
@@ -128,7 +118,6 @@
         function setReportRange(mode) {
             currentRangeMode = mode;
             
-            // UI Tab switcher style updates
             ['daily', 'weekly', 'monthly', 'all'].forEach(m => {
                 const tab = document.getElementById(`tab-${m}`);
                 if(m === mode) {
@@ -148,7 +137,6 @@
             const selectedDateValue = document.getElementById('report-date-picker').value;
             if(!selectedDateValue) return;
 
-            // Generate clean date calculations
             const targetDate = new Date(selectedDateValue);
             targetDate.setHours(0,0,0,0);
 
@@ -162,12 +150,9 @@
 
             orderKeys.forEach(key => {
                 const order = masterOrdersList[key];
-                
-                // Parse order timestamp
                 let orderDate = parseOrderDate(order.dateStr);
                 if(!orderDate) return; 
 
-                // Run structural conditional validation logic based on chosen tabs
                 let isMatch = false;
 
                 if (currentRangeMode === "all") {
@@ -182,9 +167,8 @@
                     isMatch = (orderDate.getMonth() === targetDate.getMonth() && orderDate.getFullYear() === targetDate.getFullYear());
                 }
 
-                if (!isMatch) return; // Skip if it doesn't match our criteria window
+                if (!isMatch) return;
 
-                // Increment Counter Frameworks
                 entriesRendered++;
                 const amount = Number(order.grandTotal || 0);
 
@@ -195,12 +179,10 @@
                     activeCount++;
                 }
 
-                // Compile Item Quantities metrics analytics parsing engine logic
                 parseAndAggregateItems(order.itemsSummary, itemQuantitiesBreakdown);
 
-                // Add to standard master table array output
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-gray-50 transition";
+                tr.className = "hover:bg-gray-50 transition border-b border-gray-100";
                 
                 let statusBadge = order.status === 'Completed' 
                     ? `<span class="bg-green-50 text-green-700 border border-green-200 text-[11px] font-bold px-2 py-0.5 rounded-full uppercase">Dispatched</span>`
@@ -218,10 +200,10 @@
                     <td class="p-4 font-semibold text-xs text-red-700 whitespace-nowrap">
                         ${order.deliveryTimeSlot || 'Not Selected'}
                     </td>
-                    <td class="p-4 text-xs font-medium max-w-xs break-words text-gray-600">
-                        ${order.itemsSummary}
+                    <td class="p-4 text-xs font-bold max-w-xs text-gray-800 bg-gray-50/50 rounded-lg">
+                        ${order.itemsSummary || '—'}
                     </td>
-                    <td class="p-4 text-right font-bold text-gray-900 whitespace-nowrap">
+                    <td class="p-4 text-right font-black text-gray-900 whitespace-nowrap">
                         ₹${amount}
                     </td>
                     <td class="p-4 text-center whitespace-nowrap">
@@ -235,25 +217,21 @@
                 tableBody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-400 font-medium">No order history available inside this selected filters window scope.</td></tr>`;
             }
 
-            // Update Header Display Text Context Info
             document.getElementById('window-title-display').innerText = currentRangeMode.toUpperCase() + (currentRangeMode !== 'all' ? ` : ${selectedDateValue}` : '');
             
             updateSummaryMetrics(totalRevenue, completedCount, activeCount);
             renderItemBreakdownUI(itemQuantitiesBreakdown);
         }
 
-        // Helper function to convert dynamic variants of locale string formats back into clean JS engine dates safely
         function parseOrderDate(dateStr) {
             if(!dateStr) return null;
             try {
-                // Splits standard Indian locale DD/MM/YYYY text formats cleanly
                 const parts = dateStr.split('/');
                 if(parts.length === 3) {
                     const parsedDate = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
                     parsedDate.setHours(0,0,0,0);
                     return parsedDate;
                 }
-                // Fallback for standard date constructs
                 const fallback = new Date(dateStr);
                 fallback.setHours(0,0,0,0);
                 return isNaN(fallback.getTime()) ? null : fallback;
@@ -262,7 +240,6 @@
             }
         }
 
-        // Extracts item names and multiples out of raw texts summaries seamlessly
         function parseAndAggregateItems(summaryStr, breakdownObj) {
             if (!summaryStr) return;
             const parts = summaryStr.split(',');
