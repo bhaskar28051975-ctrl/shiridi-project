@@ -3,75 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kitchen Display & Reports - Shiridi Project</title>
+    <title>Kitchen Display - Shirdi Project</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
 </head>
 <body class="bg-gray-50 text-gray-900 min-h-screen p-4 font-sans">
 
-    <div class="max-w-5xl mx-auto">
-        <!-- Header Banner: Deep Red Style -->
-        <div class="bg-red-700 text-white p-5 rounded-xl shadow-md mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header Banner: Matching Deep Red Style -->
+        <div class="bg-red-700 text-white p-5 rounded-xl shadow-md mb-6 flex justify-between items-center">
             <div>
-                <h1 class="text-2xl font-extrabold tracking-tight">Sai Krishna Kitchen Dashboard</h1>
-                <p class="text-xs text-red-100 uppercase tracking-widest font-semibold mt-0.5">Live Train Orders & Reports</p>
+                <h1 class="text-2xl font-extrabold tracking-tight">Sai Krishna Kitchen Display</h1>
+                <p class="text-xs text-red-100 uppercase tracking-widest font-semibold mt-0.5">Live Pending Train Orders</p>
             </div>
-            <!-- Metrics Summary Cards -->
-            <div class="flex gap-3 text-center">
-                <div class="bg-white/10 px-4 py-2 rounded-lg backdrop-blur-sm border border-white/10">
-                    <span class="block text-xs text-red-100 font-medium">Pending</span>
-                    <span id="count-pending" class="text-xl font-black">0</span>
-                </div>
-                <div class="bg-white/10 px-4 py-2 rounded-lg backdrop-blur-sm border border-white/10">
-                    <span class="block text-xs text-red-100 font-medium">Completed</span>
-                    <span id="count-done" class="text-xl font-black">0</span>
-                </div>
+            <!-- Live Active Count Badge -->
+            <div class="bg-white/10 px-4 py-2 rounded-lg backdrop-blur-sm border border-white/10 text-center">
+                <span class="block text-xs text-red-100 font-medium uppercase tracking-wider">Pending Tasks</span>
+                <span id="count-pending" class="text-xl font-black">0</span>
             </div>
         </div>
 
-        <!-- Main Workspace Split Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
-            <!-- Left Panel: Incoming Live Active Orders (Takes 2 Columns) -->
-            <div class="lg:col-span-2 space-y-4">
-                <h2 class="text-sm font-extrabold uppercase text-red-700 tracking-wider border-b border-gray-200 pb-1 flex items-center gap-2">
-                    🔥 Active Kitchen Orders
-                </h2>
-                <div id="active-orders-container" class="space-y-4 max-h-[75vh] overflow-y-auto pr-1">
-                    <p class="text-sm text-gray-500 text-center py-8 bg-white rounded-xl border border-gray-200 shadow-sm">Waiting for incoming food parcel orders...</p>
-                </div>
+        <!-- Live Active Orders Container -->
+        <div class="space-y-4">
+            <h2 class="text-sm font-extrabold uppercase text-red-700 tracking-wider border-b border-gray-200 pb-2 flex items-center gap-2">
+                🔥 Active Kitchen Orders
+            </h2>
+            <div id="active-orders-container" class="space-y-4 max-h-[80vh] overflow-y-auto pr-1">
+                <p class="text-sm text-gray-500 text-center py-8 bg-white rounded-xl border border-gray-200 shadow-sm">Waiting for incoming food parcel orders...</p>
             </div>
-
-            <!-- Right Panel: Historical Archive & Financial Summary Reports (Takes 1 Column) -->
-            <div class="space-y-6">
-                <div>
-                    <h2 class="text-sm font-extrabold uppercase text-gray-800 tracking-wider border-b border-gray-200 pb-1 mb-4">
-                        📈 Today's Sales Summary
-                    </h2>
-                    <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-4">
-                        <div class="flex justify-between border-b pb-2">
-                            <span class="text-xs text-gray-500 font-semibold">Total Revenue:</span>
-                            <span class="text-base font-extrabold text-red-700">₹<span id="report-revenue">0</span></span>
-                        </div>
-                        <div class="flex justify-between border-b pb-2">
-                            <span class="text-xs text-gray-500 font-semibold">Total Orders Processed:</span>
-                            <span class="text-sm font-bold text-gray-800" id="report-total-count">0</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <h2 class="text-sm font-extrabold uppercase text-gray-800 tracking-wider border-b border-gray-200 pb-1 mb-4">
-                        📋 Past Order Logs
-                    </h2>
-                    <div id="history-orders-container" class="space-y-3 max-h-[45vh] overflow-y-auto pr-1">
-                        <!-- Closed historical items populate here -->
-                        <p class="text-xs text-gray-400 text-center py-4">No completed orders logged yet.</p>
-                    </div>
-                </div>
-            </div>
-
         </div>
     </div>
 
@@ -89,36 +49,22 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Realtime streaming tracking listener for Orders Node
+        // Realtime sync tracking for Pending Kitchen Orders
         db.ref('shiridi_orders').on('value', snapshot => {
             const orders = snapshot.val() || {};
-            
             const activeContainer = document.getElementById('active-orders-container');
-            const historyContainer = document.getElementById('history-orders-container');
-            
             activeContainer.innerHTML = '';
-            historyContainer.innerHTML = '';
 
             let countPending = 0;
-            let countDone = 0;
-            let totalRevenue = 0;
-
-            const orderKeys = Object.keys(orders).reverse(); // Most recent orders showing up at top
-
-            if(orderKeys.length === 0) {
-                activeContainer.innerHTML = `<p class="text-sm text-gray-500 text-center py-8 bg-white rounded-xl border border-gray-200 shadow-sm">No orders registered inside the database.</p>`;
-                historyContainer.innerHTML = `<p class="text-xs text-gray-400 text-center py-4">No logged entries found.</p>`;
-                updateCounters(0, 0, 0, 0);
-                return;
-            }
+            const orderKeys = Object.keys(orders).reverse(); // Newest orders showing up at top
 
             orderKeys.forEach(key => {
                 const order = orders[key];
 
+                // KD only processes active "Received" tickets
                 if(order.status === "Received") {
                     countPending++;
                     
-                    // Main Active Kitchen Order Card Layout
                     const card = document.createElement('div');
                     card.className = "bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden hover:border-red-200 transition";
                     card.innerHTML = `
@@ -127,8 +73,8 @@
                                 <h3 class="font-extrabold text-sm text-gray-900">${order.customerName}</h3>
                                 <p class="text-[11px] text-gray-500 font-medium">📞 ${order.customerPhone} | 🕒 Slot: <span class="text-red-700 font-bold">${order.deliveryTimeSlot || 'Not Picked'}</span></p>
                             </div>
-                            <div class="text-right">
-                                <span class="text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-md uppercase tracking-tight">Pending Preparation</span>
+                            <div>
+                                <span class="text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-md uppercase tracking-tight">Preparing</span>
                             </div>
                         </div>
                         <div class="p-4 space-y-3">
@@ -137,7 +83,7 @@
                             </div>
                             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pt-1 gap-3">
                                 <div class="text-sm font-extrabold text-gray-800">
-                                    Total Collected: <span class="text-red-700 text-base">₹${order.grandTotal}</span>
+                                    Total Amount: <span class="text-red-700 text-base">₹${order.grandTotal}</span>
                                 </div>
                                 <div class="flex gap-2 w-full sm:w-auto">
                                     <button onclick="togglePaymentStatus('${key}', ${order.paymentVerified})" class="flex-1 sm:flex-initial text-xs px-3 py-1.5 rounded border transition font-bold ${order.paymentVerified ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'}">
@@ -151,56 +97,22 @@
                         </div>
                     `;
                     activeContainer.appendChild(card);
-                } else if(order.status === "Completed") {
-                    countDone++;
-                    totalRevenue += Number(order.grandTotal || 0);
-
-                    // Right Side Historical Log Row Layout
-                    const row = document.createElement('div');
-                    row.className = "bg-white border border-gray-200 p-3 rounded-xl shadow-sm text-xs space-y-1";
-                    row.innerHTML = `
-                        <div class="flex justify-between font-bold text-gray-900">
-                            <span>${order.customerName}</span>
-                            <span class="text-green-700">₹${order.grandTotal}</span>
-                        </div>
-                        <p class="text-[11px] text-gray-500 font-medium truncate">${order.itemsSummary}</p>
-                        <div class="flex justify-between items-center text-[10px] text-gray-400 pt-1 border-t">
-                            <span>📅 ${order.dateStr || ''}</span>
-                            <span class="text-green-600 font-bold bg-green-50 px-1.5 py-0.5 rounded">Dispatched</span>
-                        </div>
-                    `;
-                    historyContainer.appendChild(row);
                 }
             });
 
-            if (countPending === 0) {
-                activeContainer.innerHTML = `<p class="text-sm text-gray-500 text-center py-8 bg-white rounded-xl border border-gray-200 shadow-sm">All cleared! No active pending kitchen tickets right now. 🎉</p>`;
-            }
-            if (countDone === 0) {
-                historyContainer.innerHTML = `<p class="text-xs text-gray-400 text-center py-4">No completed orders logged yet.</p>`;
-            }
+            document.getElementById('count-pending').innerText = countPending;
 
-            updateCounters(countPending, countDone, totalRevenue, orderKeys.length);
+            if (countPending === 0) {
+                activeContainer.innerHTML = `<p class="text-sm text-gray-500 text-center py-8 bg-white rounded-xl border border-gray-200 shadow-sm">All cleared! No active kitchen tickets right now. 🎉</p>`;
+            }
         });
 
-        // Toggle verification flag values
         function togglePaymentStatus(key, currentFlag) {
-            db.ref(`shiridi_orders/${key}`).update({ paymentVerified: !currentFlag })
-                .catch(err => alert("Error updating status: " + err.message));
+            db.ref(`shiridi_orders/${key}`).update({ paymentVerified: !currentFlag });
         }
 
-        // Close transaction out of preparation state
         function completeOrder(key) {
-            db.ref(`shiridi_orders/${key}`).update({ status: "Completed" })
-                .catch(err => alert("Error completing order: " + err.message));
-        }
-
-        // Apply state counters into DOM UI nodes
-        function updateCounters(pending, done, revenue, total) {
-            document.getElementById('count-pending').innerText = pending;
-            document.getElementById('count-done').innerText = done;
-            document.getElementById('report-revenue').innerText = revenue;
-            document.getElementById('report-total-count').innerText = total;
+            db.ref(`shiridi_orders/${key}`).update({ status: "Completed" });
         }
     </script>
 </body>
