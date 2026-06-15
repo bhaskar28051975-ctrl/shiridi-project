@@ -3,18 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sai Krishna Caterers - Menu</title>
+    <title id="app-browser-title">Sai Krishna Caterers - Menu</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
 </head>
 <body class="bg-gray-50 text-gray-900 min-h-screen font-sans pb-24">
 
-    <div class="bg-red-700 text-white sticky top-0 z-50 px-4 py-4 shadow-md">
+    <!-- Header Banner -->
+    <div class="bg-red-700 text-white sticky top-0 z-50 px-4 py-3 shadow-md">
         <div class="max-w-md mx-auto flex justify-between items-center">
-            <div>
-                <h1 class="text-xl font-black tracking-tight uppercase">Sai Krishna Caterers</h1>
-                <p class="text-[10px] text-red-100 uppercase tracking-widest font-semibold mt-0.5">Shirdi Train Delivery Service</p>
+            <div class="flex items-center space-x-3">
+                <!-- Changeable Hotel Logo Image -->
+                <img id="app-header-logo" src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120" class="w-12 h-12 object-cover rounded-xl border border-white/20 bg-white" alt="Logo">
+                <div>
+                    <!-- Changeable Hotel Title -->
+                    <h1 id="app-header-title" class="text-base font-black tracking-tight uppercase leading-tight">Sai Krishna Caterers</h1>
+                    <p class="text-[10px] text-red-100 uppercase tracking-widest font-semibold mt-0.5">Shirdi Train Delivery Service</p>
+                </div>
             </div>
             <div class="flex gap-2">
                 <button onclick="window.location.reload()" class="bg-white/10 hover:bg-white/20 text-white font-bold text-xs px-3 py-1.5 rounded-lg tracking-wider uppercase border border-white/20">
@@ -53,6 +59,7 @@
         </div>
     </div>
 
+    <!-- Sticky Bottom Bar -->
     <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 shadow-xl z-40">
         <div class="max-w-md mx-auto flex justify-between items-center">
             <div>
@@ -65,6 +72,7 @@
         </div>
     </div>
 
+    <!-- Payment Modal -->
     <div id="payment-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             <div class="bg-red-700 text-white p-4 text-center">
@@ -120,13 +128,22 @@
 
         let globalProducts = [];
         let cartState = {};
-        let uploadedScreenshotBase64 = ""; // Holds base64 image data payload securely
+        let uploadedScreenshotBase64 = "";
 
-        // On Load Tracking System Engine
+        // Track Settings Updates (Hotel Name & Image)
+        db.ref('shiridi_settings').on('value', snapshot => {
+            const settings = snapshot.val() || {};
+            const hotelName = settings.hotelName || "Sai Krishna Caterers";
+            const hotelImage = settings.hotelImage || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120";
+            
+            document.getElementById('app-header-title').innerText = hotelName;
+            document.getElementById('app-browser-title').innerText = hotelName + " - Menu";
+            document.getElementById('app-header-logo').src = hotelImage;
+        });
+
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
             const refId = urlParams.get('ref');
-            
             if (refId) {
                 db.ref('app_clicks').push({
                     referrer: refId,
@@ -136,26 +153,23 @@
             }
         };
 
-        // Refactored Smart Trackable Sharing Action Flow Configuration
         function shareApp() {
             let phoneField = document.getElementById('cust-phone');
             let phone = phoneField.value.trim();
             
-            // If empty, prompt gracefully via field action tracking popup alert instead of instant screen blocks
             if(!phone) {
-                const userPhoneInput = prompt("Please enter your Mobile Number first so your shared link can be tracked successfully:");
+                const userPhoneInput = prompt("Enter your Mobile Number");
                 if(userPhoneInput && userPhoneInput.trim()) {
                     phone = userPhoneInput.trim();
-                    phoneField.value = phone; // sync into standard form row view mapping
+                    phoneField.value = phone;
                 } else {
-                    return; // exit safely
+                    return;
                 }
             }
             
             const shareUrl = window.location.origin + window.location.pathname + "?ref=" + phone;
-            
             navigator.clipboard.writeText(shareUrl).then(() => {
-                alert("✨ Tracking referral link copied successfully! Send this link to your friends to earn reward points.");
+                alert("Link copied! Send this to your friends.");
                 db.ref('app_shares').push({
                     referrer: phone,
                     timestamp: new Date().toISOString()
@@ -163,7 +177,6 @@
             });
         }
 
-        // Fetching structural menu data trees from firebase realtime node database
         db.ref('shiridi_menu').on('value', snapshot => {
             const data = snapshot.val() || {};
             globalProducts = [];
@@ -188,12 +201,13 @@
                 const card = document.createElement('div');
                 card.className = "bg-white border border-gray-200 rounded-3xl p-4 flex flex-col items-center justify-between text-center relative shadow-sm hover:border-red-200 transition";
                 card.innerHTML = `
-                    <div class="h-28 w-full flex items-center justify-center mb-2">
-                        <img src="${item.img}" alt="${item.name}" class="max-h-full max-w-full object-contain rounded-xl" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'">
+                    <!-- Standardized Equal Square Grid Image Frame -->
+                    <div class="w-full aspect-square flex items-center justify-center mb-2 overflow-hidden rounded-xl bg-gray-50 border border-gray-100">
+                        <img src="${item.img}" alt="${item.name}" class="w-full h-full object-cover" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'">
                     </div>
-                    <h3 class="text-xs font-extrabold text-gray-800 line-clamp-2 px-1 mb-1">${item.name}</h3>
+                    <h3 class="text-xs font-extrabold text-gray-800 line-clamp-2 px-1 mb-1 min-h-[32px] flex items-center justify-center">${item.name}</h3>
                     <p class="text-sm font-black text-red-700 mb-3">₹${item.price}</p>
-                    <div class="flex items-center justify-between w-full max-w-[105px] bg-gray-50 p-1 rounded-full border border-gray-100">
+                    <div class="flex items-center justify-between w-full max-w-[105px] bg-gray-50 p-1 rounded-full border border-gray-100 mt-auto">
                         <button onclick="adjustQty('${item.id}', -1)" class="w-7 h-7 rounded-full bg-white text-red-700 border border-gray-200 font-black flex items-center justify-center shadow-sm text-sm select-none hover:bg-gray-100">-</button>
                         <span class="font-black text-xs text-gray-800">${qty}</span>
                         <button onclick="adjustQty('${item.id}', 1)" class="w-7 h-7 rounded-full bg-red-700 text-white font-black flex items-center justify-center shadow-md text-sm select-none hover:bg-red-800">+</button>
@@ -219,7 +233,6 @@
             return total;
         }
 
-        // Checkout Modal View Management Logic Modules
         function openPaymentModal() {
             const name = document.getElementById('cust-name').value.trim();
             const phone = document.getElementById('cust-phone').value.trim();
@@ -238,41 +251,29 @@
                 return; 
             }
 
-            // Bind values dynamically directly to display layers inside modal frame container inputs
             document.getElementById('modal-grand-total').innerText = total;
-            
-            // Dynamic generation code update for payment URL QR targeting your corporate receiver credentials
             const encodedUPIUrl = `upi://pay?pa=9154095125@ybl&pn=Sai%20Krishna%20Caterers&am=${total}&cu=INR`;
             document.getElementById('upi-qr-graphic').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(encodedUPIUrl)}`;
-            
-            // Un-hide display viewport layers smoothly
             document.getElementById('payment-modal').classList.remove('hidden');
         }
 
         function closePaymentModal() {
             document.getElementById('payment-modal').classList.add('hidden');
-            // Flush uploaded state text file rows references
             uploadedScreenshotBase64 = "";
             document.getElementById('payment-screenshot-file').value = "";
             document.getElementById('file-upload-placeholder').innerText = "📁 Click to Select Image From Gallery";
         }
 
-        // Image Stream Handler convertor logic tracking engine
         function handleFileSelectedLabel(inputElement) {
             if (inputElement.files && inputElement.files[0]) {
                 const selectedFile = inputElement.files[0];
                 document.getElementById('file-upload-placeholder').innerText = `✅ Selected: ${selectedFile.name.substring(0, 20)}...`;
-                
-                // Read and compress image stream dynamically down to standard compact base64 strings securely
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    uploadedScreenshotBase64 = e.target.result;
-                };
+                reader.onload = function(e) { uploadedScreenshotBase64 = e.target.result; };
                 reader.readAsDataURL(selectedFile);
             }
         }
 
-        // Finalize transaction execution order pushing arrays into firebase streams database target trees
         function processFinalReceiptOrder() {
             const name = document.getElementById('cust-name').value.trim();
             const phone = document.getElementById('cust-phone').value.trim();
@@ -296,17 +297,15 @@
                 grandTotal: total,
                 status: "Received",
                 paymentVerified: false,
-                receiptScreenshot: uploadedScreenshotBase64, // stores the receipt screenshot context image natively
+                receiptScreenshot: uploadedScreenshotBase64,
                 dateStr: now.toLocaleDateString('en-IN'),
                 timeStr: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
             };
 
             db.ref('shiridi_orders').push(finalProcessedOrder)
                 .then(() => {
-                    alert("🎉 Order Booked Successfully! Payment proof submitted for validation review.");
+                    alert("🎉 Order Booked Successfully!");
                     closePaymentModal();
-                    
-                    // Clear inputs states rows grids context details fields
                     cartState = {};
                     document.getElementById('cust-name').value = '';
                     document.getElementById('cust-phone').value = '';
