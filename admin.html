@@ -11,10 +11,9 @@
 <body class="bg-gray-100 text-gray-900 min-h-screen p-4 font-sans">
 
     <div class="max-w-4xl mx-auto">
-        <!-- Header Banner Area -->
         <div class="bg-red-700 text-white p-5 rounded-xl shadow-md mb-6 flex justify-between items-center">
             <div class="flex items-center space-x-4">
-                <img id="admin-header-logo" src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120" class="w-14 h-14 object-cover rounded-xl border border-white/20 bg-white" alt="Logo">
+                <img id="admin-header-logo" src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120" class="w-14 h-14 object-cover rounded-xl border border-white/20 bg-white shrink-0" alt="Branding Logo">
                 <div>
                     <h1 id="admin-header-title" class="text-2xl font-bold tracking-tight">Sai Krishna Caterers Menu Admin</h1>
                     <p class="text-xs text-red-100 uppercase tracking-widest font-semibold mt-0.5">Shiridi Project Control Hub</p>
@@ -23,10 +22,8 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- Left Side Controls Framework -->
             <div class="space-y-6">
                 
-                <!-- NEW: Manage Header Setup Details Dynamic Box Row -->
                 <div class="bg-white p-5 rounded-xl shadow border border-gray-200">
                     <h2 class="text-sm font-extrabold uppercase text-gray-800 mb-3 tracking-wider border-b pb-2 flex items-center">⚙️ App Identity Branding</h2>
                     <div class="space-y-3 text-xs">
@@ -36,15 +33,18 @@
                         </div>
                         <div>
                             <label class="block mb-1 text-gray-700 font-bold">Hotel Logo Image URL</label>
-                            <input type="text" id="setup-hotel-image" class="w-full bg-gray-50 border border-gray-300 rounded p-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-600" placeholder="Paste branding logo link">
+                            <input type="text" id="setup-hotel-image" class="w-full bg-gray-50 border border-gray-300 rounded p-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-600" placeholder="Paste branding thumbnail square logo link">
                         </div>
-                        <button onclick="saveAppIdentitySettings()" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 rounded transition uppercase tracking-wider text-[11px]">
+                        <div>
+                            <label class="block mb-1 text-gray-700 font-bold">App Banner Image URL (Full Width)</label>
+                            <input type="text" id="setup-banner-image" class="w-full bg-gray-50 border border-gray-300 rounded p-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-600" placeholder="Paste full-width main view banner graphic url link">
+                        </div>
+                        <button onclick="saveAppIdentitySettings()" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-bold py-2.5 rounded transition uppercase tracking-wider text-[11px] mt-1 shadow-sm">
                             Update Identity Settings
                         </button>
                     </div>
                 </div>
 
-                <!-- Food Operations Input Node Form Box Wrapper -->
                 <div class="bg-white p-5 rounded-xl shadow border border-gray-200">
                     <h2 id="form-title" class="text-sm font-extrabold uppercase text-red-700 mb-4 tracking-wider">✨ Add New Food Item</h2>
                     <input type="hidden" id="item-id">
@@ -77,12 +77,10 @@
 
             </div>
 
-            <!-- Right Side Dynamic Listing Column Area Frame -->
             <div class="md:col-span-2 bg-white p-5 rounded-xl shadow border border-gray-200">
                 <h2 class="text-sm font-extrabold uppercase text-gray-800 mb-4 border-b border-gray-200 pb-2 tracking-wider">📋 Current Live Items</h2>
-                <div id="admin-menu-container" class="space-y-3 max-h-[75vh] overflow-y-auto pr-1">
-                    <!-- Dynamic Rows Insertion Target Output Node Point -->
-                </div>
+                <div id="admin-menu-container" class="space-y-3 max-h-[78vh] overflow-y-auto pr-1">
+                    </div>
             </div>
         </div>
     </div>
@@ -101,27 +99,32 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Sync & Watch Global App Branding Metadata Node Changes
+        // Listen for global configuration updates natively from realtime database setup streams node
         db.ref('shiridi_settings').on('value', snapshot => {
             const settings = snapshot.val() || {};
             const hotelName = settings.hotelName || "Sai Krishna Caterers";
             const hotelImage = settings.hotelImage || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120";
+            const bannerImage = settings.bannerImage || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800";
             
             document.getElementById('admin-header-title').innerText = hotelName + " Admin";
             document.getElementById('admin-header-logo').src = hotelImage;
             
-            // Populate the inputs if user isn't currently interacting typing things manually
+            // Populate inputs without breaking active focus states
             if(document.activeElement !== document.getElementById('setup-hotel-name')) {
                 document.getElementById('setup-hotel-name').value = hotelName;
             }
             if(document.activeElement !== document.getElementById('setup-hotel-image')) {
                 document.getElementById('setup-hotel-image').value = hotelImage;
             }
+            if(document.activeElement !== document.getElementById('setup-banner-image')) {
+                document.getElementById('setup-banner-image').value = bannerImage;
+            }
         });
 
         function saveAppIdentitySettings() {
             const hName = document.getElementById('setup-hotel-name').value.trim();
             const hImg = document.getElementById('setup-hotel-image').value.trim();
+            const bImg = document.getElementById('setup-banner-image').value.trim();
             
             if(!hName) {
                 alert("Hotel Name field cannot be empty.");
@@ -130,8 +133,9 @@
             
             db.ref('shiridi_settings').set({
                 hotelName: hName,
-                hotelImage: hImg || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120"
-            }).then(() => alert("Identity settings synced across application nodes successfully!"))
+                hotelImage: hImg || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120",
+                bannerImage: bImg || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800"
+            }).then(() => alert("Identity and Banner configuration synced across application layers successfully!"))
               .catch(err => alert("Error syncing layout properties: " + err.message));
         }
 
@@ -151,7 +155,6 @@
                 row.className = "flex items-center justify-between bg-gray-50 border border-gray-200 p-3 rounded-xl shadow-sm";
                 row.innerHTML = `
                     <div class="flex items-center space-x-3">
-                        <!-- Standardized Fixed Uniform 1:1 Aspect Frame Thumbnail Cover Box inside Admin -->
                         <div class="w-12 h-12 overflow-hidden rounded-lg border border-gray-200 bg-white flex items-center justify-center shrink-0">
                             <img src="${item.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120'}" class="w-full h-full object-cover" alt="">
                         </div>
