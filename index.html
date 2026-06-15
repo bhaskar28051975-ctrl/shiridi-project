@@ -10,14 +10,11 @@
 </head>
 <body class="bg-gray-50 text-gray-900 min-h-screen font-sans pb-24">
 
-    <!-- Header Banner -->
     <div class="bg-red-700 text-white sticky top-0 z-50 px-4 py-3 shadow-md">
         <div class="max-w-md mx-auto flex justify-between items-center">
             <div class="flex items-center space-x-3">
-                <!-- Changeable Hotel Logo Image -->
-                <img id="app-header-logo" src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120" class="w-12 h-12 object-cover rounded-xl border border-white/20 bg-white" alt="Logo">
+                <img id="app-header-logo" src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120" class="w-12 h-12 object-cover rounded-xl border border-white/20 bg-white shrink-0" alt="Logo">
                 <div>
-                    <!-- Changeable Hotel Title -->
                     <h1 id="app-header-title" class="text-base font-black tracking-tight uppercase leading-tight">Sai Krishna Caterers</h1>
                     <p class="text-[10px] text-red-100 uppercase tracking-widest font-semibold mt-0.5">Shirdi Train Delivery Service</p>
                 </div>
@@ -28,6 +25,10 @@
                 </button>
             </div>
         </div>
+    </div>
+
+    <div class="max-w-md mx-auto px-4 mt-4">
+        <img id="app-banner-image" src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800" class="w-full h-44 object-cover rounded-2xl shadow-sm border border-gray-100 bg-gray-200" alt="Hotel Banner">
     </div>
 
     <div class="max-w-md mx-auto px-4 mt-6">
@@ -59,7 +60,6 @@
         </div>
     </div>
 
-    <!-- Sticky Bottom Bar -->
     <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 shadow-xl z-40">
         <div class="max-w-md mx-auto flex justify-between items-center">
             <div>
@@ -72,7 +72,6 @@
         </div>
     </div>
 
-    <!-- Payment Modal -->
     <div id="payment-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             <div class="bg-red-700 text-white p-4 text-center">
@@ -130,20 +129,24 @@
         let cartState = {};
         let uploadedScreenshotBase64 = "";
 
-        // Track Settings Updates (Hotel Name & Image)
+        // Dynamic Realtime Synchronization System for Hotel Profile Layout Changes
         db.ref('shiridi_settings').on('value', snapshot => {
             const settings = snapshot.val() || {};
             const hotelName = settings.hotelName || "Sai Krishna Caterers";
             const hotelImage = settings.hotelImage || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120";
+            const bannerImage = settings.bannerImage || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800";
             
             document.getElementById('app-header-title').innerText = hotelName;
             document.getElementById('app-browser-title').innerText = hotelName + " - Menu";
             document.getElementById('app-header-logo').src = hotelImage;
+            document.getElementById('app-banner-image').src = bannerImage;
         });
 
+        // Scan Event Log Analytics Listener
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
             const refId = urlParams.get('ref');
+            
             if (refId) {
                 db.ref('app_clicks').push({
                     referrer: refId,
@@ -153,12 +156,13 @@
             }
         };
 
+        // Generation Sharing Logic Modules
         function shareApp() {
             let phoneField = document.getElementById('cust-phone');
             let phone = phoneField.value.trim();
             
             if(!phone) {
-                const userPhoneInput = prompt("Enter your Mobile Number");
+                const userPhoneInput = prompt("Please enter your Mobile Number first so your shared link can be tracked successfully:");
                 if(userPhoneInput && userPhoneInput.trim()) {
                     phone = userPhoneInput.trim();
                     phoneField.value = phone;
@@ -168,8 +172,9 @@
             }
             
             const shareUrl = window.location.origin + window.location.pathname + "?ref=" + phone;
+            
             navigator.clipboard.writeText(shareUrl).then(() => {
-                alert("Link copied! Send this to your friends.");
+                alert("✨ Tracking referral link copied successfully! Send this link to your friends to earn reward points.");
                 db.ref('app_shares').push({
                     referrer: phone,
                     timestamp: new Date().toISOString()
@@ -177,6 +182,7 @@
             });
         }
 
+        // Active Food stream mapping updates node snapshot
         db.ref('shiridi_menu').on('value', snapshot => {
             const data = snapshot.val() || {};
             globalProducts = [];
@@ -196,12 +202,12 @@
         function renderMenuUI() {
             const container = document.getElementById('menu-container');
             container.innerHTML = '';
+            
             globalProducts.forEach(item => {
                 const qty = cartState[item.id] || 0;
                 const card = document.createElement('div');
                 card.className = "bg-white border border-gray-200 rounded-3xl p-4 flex flex-col items-center justify-between text-center relative shadow-sm hover:border-red-200 transition";
                 card.innerHTML = `
-                    <!-- Standardized Equal Square Grid Image Frame -->
                     <div class="w-full aspect-square flex items-center justify-center mb-2 overflow-hidden rounded-xl bg-gray-50 border border-gray-100">
                         <img src="${item.img}" alt="${item.name}" class="w-full h-full object-cover" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'">
                     </div>
@@ -252,8 +258,10 @@
             }
 
             document.getElementById('modal-grand-total').innerText = total;
+            
             const encodedUPIUrl = `upi://pay?pa=9154095125@ybl&pn=Sai%20Krishna%20Caterers&am=${total}&cu=INR`;
             document.getElementById('upi-qr-graphic').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(encodedUPIUrl)}`;
+            
             document.getElementById('payment-modal').classList.remove('hidden');
         }
 
@@ -268,8 +276,11 @@
             if (inputElement.files && inputElement.files[0]) {
                 const selectedFile = inputElement.files[0];
                 document.getElementById('file-upload-placeholder').innerText = `✅ Selected: ${selectedFile.name.substring(0, 20)}...`;
+                
                 const reader = new FileReader();
-                reader.onload = function(e) { uploadedScreenshotBase64 = e.target.result; };
+                reader.onload = function(e) {
+                    uploadedScreenshotBase64 = e.target.result;
+                };
                 reader.readAsDataURL(selectedFile);
             }
         }
@@ -304,8 +315,9 @@
 
             db.ref('shiridi_orders').push(finalProcessedOrder)
                 .then(() => {
-                    alert("🎉 Order Booked Successfully!");
+                    alert("🎉 Order Booked Successfully! Payment proof submitted for validation review.");
                     closePaymentModal();
+                    
                     cartState = {};
                     document.getElementById('cust-name').value = '';
                     document.getElementById('cust-phone').value = '';
