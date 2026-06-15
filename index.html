@@ -10,11 +10,14 @@
 </head>
 <body class="bg-gray-50 text-gray-900 min-h-screen font-sans pb-24">
 
+    <!-- Header Banner Area -->
     <div class="bg-red-700 text-white sticky top-0 z-50 px-4 py-3 shadow-md">
         <div class="max-w-md mx-auto flex justify-between items-center">
             <div class="flex items-center space-x-3">
+                <!-- Dynamic Square Logo Image -->
                 <img id="app-header-logo" src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120" class="w-12 h-12 object-cover rounded-xl border border-white/20 bg-white shrink-0" alt="Logo">
                 <div>
+                    <!-- Dynamic Hotel Title -->
                     <h1 id="app-header-title" class="text-base font-black tracking-tight uppercase leading-tight">Sai Krishna Caterers</h1>
                     <p class="text-[10px] text-red-100 uppercase tracking-widest font-semibold mt-0.5">Shirdi Train Delivery Service</p>
                 </div>
@@ -27,20 +30,24 @@
         </div>
     </div>
 
+    <!-- Full-Width Changeable Banner Section -->
     <div class="max-w-md mx-auto px-4 mt-4">
         <img id="app-banner-image" src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800" class="w-full h-44 object-cover rounded-2xl shadow-sm border border-gray-100 bg-gray-200" alt="Hotel Banner">
     </div>
 
+    <!-- Main Container -->
     <div class="max-w-md mx-auto px-4 mt-6">
         <div class="flex items-center gap-3 mb-6">
             <div class="w-1.5 h-7 bg-red-700 rounded-full"></div>
             <h2 class="text-lg font-extrabold uppercase text-gray-800 tracking-wide">Select Food Items</h2>
         </div>
 
+        <!-- Food Menu Grid Display -->
         <div id="menu-container" class="grid grid-cols-2 gap-4">
             <p class="col-span-2 text-center text-sm text-gray-400 py-8">Loading fresh dishes from database...</p>
         </div>
 
+        <!-- Form Registration fields -->
         <div class="mt-8 bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-4">
             <h3 class="text-xs font-black uppercase text-red-700 tracking-wider border-b pb-2">Delivery & Customer Details</h3>
             
@@ -60,6 +67,7 @@
         </div>
     </div>
 
+    <!-- Fixed Sticky Action Footer View -->
     <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 shadow-xl z-40">
         <div class="max-w-md mx-auto flex justify-between items-center">
             <div>
@@ -72,6 +80,7 @@
         </div>
     </div>
 
+    <!-- Checkout Verification Gateway Modal overlay screen layer -->
     <div id="payment-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             <div class="bg-red-700 text-white p-4 text-center">
@@ -85,11 +94,12 @@
                     <span class="text-2xl font-black text-red-700">₹<span id="modal-grand-total">0</span></span>
                 </div>
 
-                <div class="flex justify-center my-2 p-2 bg-white border border-gray-200 rounded-2xl max-w-[200px] mx-auto shadow-inner">
-                    <img id="upi-qr-graphic" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=9154095125@ybl%26pn=Sai%20Krishna%20Caterers%26cu=INR" alt="Payment QR Code" class="w-full h-auto object-contain">
+                <!-- FIXED: Now loads your specific uploaded image directly inside the code layout framework template -->
+                <div class="flex justify-center my-2 p-2 bg-white border border-gray-200 rounded-2xl max-w-[220px] mx-auto shadow-inner">
+                    <img id="upi-qr-graphic" src="AccountQRCodeAirtel Payments Bank Limited - 5125_LIGHT_THEME.png" alt="Payment QR Code" class="w-full h-auto object-contain">
                 </div>
                 
-                <p class="text-[11px] font-bold text-gray-500 uppercase tracking-wide">Merchant UPI ID: <span class="text-gray-800 font-extrabold">9154095125@ybl</span></p>
+                <p class="text-[11px] font-bold text-gray-500 uppercase tracking-wide">Merchant Name: <span class="text-gray-800 font-extrabold">A Bhaskar</span></p>
 
                 <div class="text-left space-y-1">
                     <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-wider px-1">Upload Payment Receipt Screenshot:</label>
@@ -258,10 +268,6 @@
             }
 
             document.getElementById('modal-grand-total').innerText = total;
-            
-            const encodedUPIUrl = `upi://pay?pa=9154095125@ybl&pn=Sai%20Krishna%20Caterers&am=${total}&cu=INR`;
-            document.getElementById('upi-qr-graphic').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(encodedUPIUrl)}`;
-            
             document.getElementById('payment-modal').classList.remove('hidden');
         }
 
