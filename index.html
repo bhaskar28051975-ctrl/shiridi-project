@@ -7,17 +7,15 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-storage-compat.js"></script>
 </head>
 <body class="bg-gray-50 text-gray-900 min-h-screen font-sans pb-24">
 
-    <!-- Header Banner Area -->
     <div class="bg-red-700 text-white sticky top-0 z-50 px-4 py-3 shadow-md">
         <div class="max-w-md mx-auto flex justify-between items-center">
             <div class="flex items-center space-x-3">
-                <!-- Dynamic Square Logo Image -->
                 <img id="app-header-logo" src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120" class="w-12 h-12 object-cover rounded-xl border border-white/20 bg-white shrink-0" alt="Logo">
                 <div>
-                    <!-- Dynamic Hotel Title -->
                     <h1 id="app-header-title" class="text-base font-black tracking-tight uppercase leading-tight">Sai Krishna Caterers</h1>
                     <p class="text-[10px] text-red-100 uppercase tracking-widest font-semibold mt-0.5">Shirdi Train Delivery Service</p>
                 </div>
@@ -30,24 +28,20 @@
         </div>
     </div>
 
-    <!-- Full-Width Changeable Banner Section -->
     <div class="max-w-md mx-auto px-4 mt-4">
         <img id="app-banner-image" src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800" class="w-full h-44 object-cover rounded-2xl shadow-sm border border-gray-100 bg-gray-200" alt="Hotel Banner">
     </div>
 
-    <!-- Main Container -->
     <div class="max-w-md mx-auto px-4 mt-6">
         <div class="flex items-center gap-3 mb-6">
             <div class="w-1.5 h-7 bg-red-700 rounded-full"></div>
             <h2 class="text-lg font-extrabold uppercase text-gray-800 tracking-wide">Select Food Items</h2>
         </div>
 
-        <!-- Food Menu Grid Display -->
         <div id="menu-container" class="grid grid-cols-2 gap-4">
             <p class="col-span-2 text-center text-sm text-gray-400 py-8">Loading fresh dishes from database...</p>
         </div>
 
-        <!-- Form Registration fields -->
         <div class="mt-8 bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-4">
             <h3 class="text-xs font-black uppercase text-red-700 tracking-wider border-b pb-2">Delivery & Customer Details</h3>
             
@@ -67,7 +61,6 @@
         </div>
     </div>
 
-    <!-- Fixed Sticky Action Footer View -->
     <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 shadow-xl z-40">
         <div class="max-w-md mx-auto flex justify-between items-center">
             <div>
@@ -80,7 +73,6 @@
         </div>
     </div>
 
-    <!-- Checkout Verification Gateway Modal overlay screen layer -->
     <div id="payment-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             <div class="bg-red-700 text-white p-4 text-center">
@@ -94,7 +86,6 @@
                     <span class="text-2xl font-black text-red-700">₹<span id="modal-grand-total">0</span></span>
                 </div>
 
-                <!-- FIXED: Now loads your specific uploaded image directly inside the code layout framework template -->
                 <div class="flex justify-center my-2 p-2 bg-white border border-gray-200 rounded-2xl max-w-[220px] mx-auto shadow-inner">
                     <img id="upi-qr-graphic" src="AccountQRCodeAirtel Payments Bank Limited - 5125_LIGHT_THEME.png" alt="Payment QR Code" class="w-full h-auto object-contain">
                 </div>
@@ -113,7 +104,7 @@
                     <button onclick="closePaymentModal()" class="border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs font-bold py-3 rounded-xl uppercase tracking-wider transition">
                         Cancel
                     </button>
-                    <button onclick="processFinalReceiptOrder()" class="bg-green-600 hover:bg-green-700 text-white text-xs font-extrabold py-3 rounded-xl uppercase tracking-wider transition shadow-md">
+                    <button id="submit-order-btn" onclick="processFinalReceiptOrder()" class="bg-green-600 hover:bg-green-700 text-white text-xs font-extrabold py-3 rounded-xl uppercase tracking-wider transition shadow-md">
                         👍 I Have Paid
                     </button>
                 </div>
@@ -134,12 +125,13 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+        const storage = firebase.storage(); // Storage Initiation Block
 
         let globalProducts = [];
         let cartState = {};
-        let uploadedScreenshotBase64 = "";
+        let selectedFileObject = null; // Storing actual high-res file handle safely
 
-        // Dynamic Realtime Synchronization System for Hotel Profile Layout Changes
+        // Dynamic Realtime Synchronization System
         db.ref('shiridi_settings').on('value', snapshot => {
             const settings = snapshot.val() || {};
             const hotelName = settings.hotelName || "Sai Krishna Caterers";
@@ -152,7 +144,6 @@
             document.getElementById('app-banner-image').src = bannerImage;
         });
 
-        // Scan Event Log Analytics Listener
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
             const refId = urlParams.get('ref');
@@ -166,7 +157,6 @@
             }
         };
 
-        // Generation Sharing Logic Modules
         function shareApp() {
             let phoneField = document.getElementById('cust-phone');
             let phone = phoneField.value.trim();
@@ -192,7 +182,6 @@
             });
         }
 
-        // Active Food stream mapping updates node snapshot
         db.ref('shiridi_menu').on('value', snapshot => {
             const data = snapshot.val() || {};
             globalProducts = [];
@@ -273,21 +262,17 @@
 
         function closePaymentModal() {
             document.getElementById('payment-modal').classList.add('hidden');
-            uploadedScreenshotBase64 = "";
+            selectedFileObject = null;
             document.getElementById('payment-screenshot-file').value = "";
             document.getElementById('file-upload-placeholder').innerText = "📁 Click to Select Image From Gallery";
+            document.getElementById('submit-order-btn').innerText = "👍 I Have Paid";
+            document.getElementById('submit-order-btn').disabled = false;
         }
 
         function handleFileSelectedLabel(inputElement) {
             if (inputElement.files && inputElement.files[0]) {
-                const selectedFile = inputElement.files[0];
-                document.getElementById('file-upload-placeholder').innerText = `✅ Selected: ${selectedFile.name.substring(0, 20)}...`;
-                
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    uploadedScreenshotBase64 = e.target.result;
-                };
-                reader.readAsDataURL(selectedFile);
+                selectedFileObject = inputElement.files[0];
+                document.getElementById('file-upload-placeholder').innerText = `✅ Selected: ${selectedFileObject.name.substring(0, 20)}...`;
             }
         }
 
@@ -296,34 +281,69 @@
             const phone = document.getElementById('cust-phone').value.trim();
             const manualSlot = document.getElementById('cust-slot-manual').value.trim();
             const total = calculateTotals();
+            const submitBtn = document.getElementById('submit-order-btn');
 
-            if(!uploadedScreenshotBase64) {
+            if(!selectedFileObject) {
                 alert("Please upload your payment transaction receipt screenshot from your gallery to verify payment!");
                 return;
             }
 
-            let itemsSummaryParts = [];
-            globalProducts.forEach(i => { if(cartState[i.id]) itemsSummaryParts.push(`${i.name} (${cartState[i.id]}x)`); });
+            // Disable button to prevent double execution during file transfer
+            submitBtn.innerText = "⏳ Uploading Proof...";
+            submitBtn.disabled = true;
 
-            const now = new Date();
-            const finalProcessedOrder = {
-                customerName: name,
-                customerPhone: phone,
-                deliveryTimeSlot: manualSlot,
-                itemsSummary: itemsSummaryParts.join(", "),
-                grandTotal: total,
-                status: "Received",
-                paymentVerified: false,
-                receiptScreenshot: uploadedScreenshotBase64,
-                dateStr: now.toLocaleDateString('en-IN'),
-                timeStr: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
-            };
+            // Step 1: Upload Image file cleanly into dedicated storage bucket
+            const storagePathRef = storage.ref('receipts/' + Date.now() + '_' + selectedFileObject.name);
+            
+            storagePathRef.put(selectedFileObject)
+                .then(snapshot => snapshot.ref.getDownloadURL())
+                .then(uploadedUrl => {
+                    // Step 2: Formulate variables to create functional entry structures
+                    let itemsSummaryParts = [];
+                    globalProducts.forEach(i => { if(cartState[i.id]) itemsSummaryParts.push(`${i.name} (${cartState[i.id]}x)`); });
 
-            db.ref('shiridi_orders').push(finalProcessedOrder)
-                .then(() => {
-                    alert("🎉 Order Booked Successfully! Payment proof submitted for validation review.");
-                    closePaymentModal();
+                    const now = new Date();
+                    const itemsSummaryText = itemsSummaryParts.join(", ");
+                    const finalProcessedOrder = {
+                        customerName: name,
+                        customerPhone: phone,
+                        deliveryTimeSlot: manualSlot,
+                        itemsSummary: itemsSummaryText,
+                        grandTotal: total,
+                        status: "Received",
+                        paymentVerified: false,
+                        receiptScreenshot: uploadedUrl, // Cloud safe image link saved
+                        dateStr: now.toLocaleDateString('en-IN'),
+                        timeStr: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+                    };
+
+                    // Step 3: Insert order record inside Realtime Database
+                    return db.ref('shiridi_orders').push(finalProcessedOrder).then(() => {
+                        return { uploadedUrl, itemsSummaryText };
+                    });
+                })
+                .then((data) => {
+                    alert("🎉 Order Booked Successfully! Opening WhatsApp to forward payment receipt confirmation.");
                     
+                    // Step 4: Programmatic Text Generation Block for WhatsApp Forwarding Strategy
+                    const textMessageTemplate = `Hello Sai Krishna Caterers, I have placed an order!\n\n` +
+                                                `👤 *Name:* ${name}\n` +
+                                                `📞 *Phone:* ${phone}\n` +
+                                                `🍱 *Items:* ${data.itemsSummaryText}\n` +
+                                                `💰 *Total Amount:* ₹${total}\n` +
+                                                `📍 *Delivery Slot:* ${manualSlot}\n\n` +
+                                                `🖼️ *Payment Link:* ${data.uploadedUrl}\n\n` +
+                                                `Please accept my order. Thank you! 🙏`;
+
+                    // Formulating clean link context targeting merchant endpoint configuration
+                    const encodedMessage = encodeURIComponent(textMessageTemplate);
+                    const whatsappRedirectEndpoint = `https://wa.me/91XXXXXXXXXX?text=${encodedMessage}`; // REPLACE 91XXXXXXXXXX with your actual phonepe business account tracking mobile line.
+                    
+                    // Trigger routing context safely outside the application structure natively
+                    window.open(whatsappRedirectEndpoint, '_blank');
+
+                    // Reset Customer State Architecture completely
+                    closePaymentModal();
                     cartState = {};
                     document.getElementById('cust-name').value = '';
                     document.getElementById('cust-phone').value = '';
@@ -331,7 +351,11 @@
                     renderMenuUI();
                     calculateTotals();
                 })
-                .catch(err => alert("Error booking order: " + err.message));
+                .catch(err => {
+                    alert("Error booking order process failed: " + err.message);
+                    submitBtn.innerText = "👍 I Have Paid";
+                    submitBtn.disabled = false;
+                });
         }
     </script>
 </body>
