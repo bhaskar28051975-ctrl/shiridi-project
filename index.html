@@ -19,11 +19,16 @@
                 <img id="app-header-logo" src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120" class="w-12 h-12 object-cover rounded-xl border border-white/20 bg-white shrink-0" alt="Logo">
                 <div>
                     <h1 id="app-header-title" class="text-base font-black tracking-tight uppercase leading-tight">Sai Krishna Caterers</h1>
-                    <p class="text-[10px] text-red-100 uppercase tracking-widest font-semibold mt-0.5">Shirdi Train Delivery Service</p>
+                    <!-- DYNAMIC SUBTITLE: Controlled by Firebase shiridi_settings.subTitle -->
+                    <p id="app-header-subtitle" class="text-[10px] text-red-100 uppercase tracking-widest font-semibold mt-0.5">Train percel service</p>
                 </div>
             </div>
-            <div class="flex gap-2">
-                <button onclick="window.location.reload()" class="bg-white/10 hover:bg-white/20 text-white font-bold text-xs px-3 py-1.5 rounded-lg tracking-wider uppercase border border-white/20">
+            <!-- Action Buttons Stack (Share above Refresh) -->
+            <div class="flex flex-col gap-1.5 shrink-0">
+                <button onclick="shareApp()" class="bg-green-600 hover:bg-green-700 text-white font-bold text-[10px] px-2.5 py-1 rounded-md tracking-wider uppercase shadow-sm flex items-center justify-center gap-1 transition">
+                    Share 🔗
+                </button>
+                <button onclick="window.location.reload()" class="bg-white/10 hover:bg-white/20 text-white font-bold text-[10px] px-2.5 py-1 rounded-md tracking-wider uppercase border border-white/20 transition">
                     Refresh
                 </button>
             </div>
@@ -61,9 +66,10 @@
                 </div>
             </div>
 
-            <button onclick="shareApp()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold text-sm py-3 rounded-xl shadow-md uppercase tracking-wider transition">
-                Share My Link & Earn Points 🔗
-            </button>
+            <!-- Static Delivery Location Marker Block -->
+            <div class="w-full bg-amber-50 border border-amber-200 text-amber-800 font-extrabold text-xs py-3.5 px-4 rounded-xl shadow-sm uppercase tracking-wider text-center flex items-center justify-center gap-2">
+                <span>📍 Delivery point : Restaurant</span>
+            </div>
         </div>
     </div>
 
@@ -145,11 +151,13 @@
             const hotelName = settings.hotelName || "Sai Krishna Caterers";
             const hotelImage = settings.hotelImage || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120";
             const bannerImage = settings.bannerImage || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800";
+            const subTitle = settings.subTitle || "Train percel service";
             
             document.getElementById('app-header-title').innerText = hotelName;
             document.getElementById('app-browser-title').innerText = hotelName + " - Menu";
             document.getElementById('app-header-logo').src = hotelImage;
             document.getElementById('app-banner-image').src = bannerImage;
+            document.getElementById('app-header-subtitle').innerText = subTitle;
         });
 
         window.onload = function() {
@@ -296,17 +304,14 @@
                 return;
             }
 
-            // Disable button to prevent double execution
             submitBtn.innerText = "⏳ Uploading Proof...";
             submitBtn.disabled = true;
 
-            // Step 1: Upload Image file cleanly into Firebase Storage
             const storagePathRef = storage.ref('receipts/' + Date.now() + '_' + selectedFileObject.name);
             
             storagePathRef.put(selectedFileObject)
                 .then(snapshot => snapshot.ref.getDownloadURL())
                 .then(uploadedUrl => {
-                    // Step 2: Extract ordered products for the summary text
                     let itemsSummaryParts = [];
                     globalProducts.forEach(i => { if(cartState[i.id]) itemsSummaryParts.push(`${i.name} (${cartState[i.id]}x)`); });
 
@@ -320,12 +325,11 @@
                         grandTotal: total,
                         status: "Received",
                         paymentVerified: false,
-                        receiptScreenshot: uploadedUrl, // Safe cloud URL saved in the RTDB
+                        receiptScreenshot: uploadedUrl,
                         dateStr: now.toLocaleDateString('en-IN'),
                         timeStr: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
                     };
 
-                    // Step 3: Insert order record inside Realtime Database
                     return db.ref('shiridi_orders').push(finalProcessedOrder).then(() => {
                         return { uploadedUrl, itemsSummaryText };
                     });
@@ -333,7 +337,6 @@
                 .then((data) => {
                     alert("🎉 Order Booked Successfully! Opening WhatsApp to forward payment receipt confirmation.");
                     
-                    // Step 4: Text Generation for WhatsApp Formatting with YOUR SPECIFIC PHONE NUMBER
                     const textMessageTemplate = `Hello Sai Krishna Caterers, I have placed an order!\n\n` +
                                                 `👤 *Name:* ${name}\n` +
                                                 `📞 *Phone:* ${phone}\n` +
@@ -346,10 +349,8 @@
                     const encodedMessage = encodeURIComponent(textMessageTemplate);
                     const whatsappRedirectEndpoint = `https://wa.me/919154095125?text=${encodedMessage}`;
                     
-                    // Trigger routing context safely outside the application structure natively
                     window.open(whatsappRedirectEndpoint, '_blank');
 
-                    // Reset Customer State Architecture completely
                     closePaymentModal();
                     cartState = {};
                     document.getElementById('cust-name').value = '';
