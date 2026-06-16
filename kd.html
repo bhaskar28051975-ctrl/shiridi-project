@@ -11,17 +11,20 @@
 <body class="bg-gray-50 text-gray-900 min-h-screen p-4 font-sans">
 
     <div class="max-w-4xl mx-auto">
+        <!-- Header Banner -->
         <div class="bg-red-700 text-white p-5 rounded-xl shadow-md mb-6 flex justify-between items-center">
             <div>
                 <h1 class="text-2xl font-extrabold tracking-tight">Sai Krishna Kitchen Display</h1>
                 <p class="text-xs text-red-100 uppercase tracking-widest font-semibold mt-0.5">Live Pending Train Orders</p>
             </div>
+            <!-- Live Active Count Badge -->
             <div class="bg-white/10 px-4 py-2 rounded-lg backdrop-blur-sm border border-white/10 text-center">
                 <span class="block text-xs text-red-100 font-medium uppercase tracking-wider">Pending Tasks</span>
                 <span id="count-pending" class="text-xl font-black">0</span>
             </div>
         </div>
 
+        <!-- Live Active Orders Container -->
         <div class="space-y-4">
             <h2 class="text-sm font-extrabold uppercase text-red-700 tracking-wider border-b border-gray-200 pb-2 flex items-center gap-2">
                 🔥 Active Kitchen Orders
@@ -64,7 +67,6 @@
                     const card = document.createElement('div');
                     card.className = "bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden hover:border-red-200 transition";
                     
-                    // Safety logic if no payment image link structure was assigned explicitly
                     const imageScreenshotUrl = order.receiptScreenshot || "#";
                     const hasValidImage = order.receiptScreenshot ? true : false;
 
@@ -80,6 +82,7 @@
                         </div>
                         <div class="p-4 flex flex-col md:flex-row gap-4 items-start justify-between">
                             
+                            <!-- Left Display Side: Summary Metrics -->
                             <div class="space-y-3 flex-1 w-full">
                                 <div class="bg-gray-50 border border-gray-200 p-3 rounded-lg text-sm font-bold text-red-800 leading-relaxed shadow-inner">
                                     🍱 ${order.itemsSummary}
@@ -97,6 +100,7 @@
                                 </div>
                             </div>
 
+                            <!-- Right Display Side: Live Image Screenshot Preview Box -->
                             <div class="w-full md:w-32 shrink-0 flex flex-col items-center bg-gray-50 border border-gray-200 p-2 rounded-xl text-center">
                                 <span class="text-[10px] font-black uppercase text-gray-400 tracking-wider block mb-1">Receipt Proof</span>
                                 ${hasValidImage ? `
