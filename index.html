@@ -7,12 +7,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
-    <!-- Firebase Storage Script Package -->
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-storage-compat.js"></script>
 </head>
 <body class="bg-gray-50 text-gray-900 min-h-screen font-sans pb-24">
 
-    <!-- Header Banner Area -->
     <div class="bg-red-700 text-white sticky top-0 z-50 px-4 py-3 shadow-md">
         <div class="max-w-md mx-auto flex justify-between items-center">
             <div class="flex items-center space-x-3">
@@ -22,7 +20,6 @@
                     <p id="app-header-subtitle" class="text-[10px] text-red-100 uppercase tracking-widest font-semibold mt-0.5">Train percel service</p>
                 </div>
             </div>
-            <!-- Action Buttons Stack (Share above Refresh) -->
             <div class="flex flex-col gap-1.5 shrink-0">
                 <button onclick="shareApp()" class="bg-green-600 hover:bg-green-700 text-white font-bold text-[10px] px-2.5 py-1 rounded-md tracking-wider uppercase shadow-sm flex items-center justify-center gap-1 transition">
                     Share 🔗
@@ -34,24 +31,20 @@
         </div>
     </div>
 
-    <!-- Full-Width Changeable Banner Section -->
     <div class="max-w-md mx-auto px-4 mt-4">
         <img id="app-banner-image" src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800" class="w-full h-44 object-cover rounded-2xl shadow-sm border border-gray-100 bg-gray-200" alt="Hotel Banner">
     </div>
 
-    <!-- Main Container -->
     <div class="max-w-md mx-auto px-4 mt-6">
         <div class="flex items-center gap-3 mb-6">
             <div class="w-1.5 h-7 bg-red-700 rounded-full"></div>
             <h2 class="text-lg font-extrabold uppercase text-gray-800 tracking-wide">Select Food Items</h2>
         </div>
 
-        <!-- Food Menu Grid Display -->
         <div id="menu-container" class="grid grid-cols-2 gap-4">
             <p class="col-span-2 text-center text-sm text-gray-400 py-8">Loading fresh dishes from database...</p>
         </div>
 
-        <!-- Form Registration fields -->
         <div class="mt-8 bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-4">
             <h3 class="text-xs font-black uppercase text-red-700 tracking-wider border-b pb-2">Delivery & Customer Details</h3>
             
@@ -65,14 +58,12 @@
                 </div>
             </div>
 
-            <!-- Delivery Location Status Badge -->
             <div class="w-full bg-amber-50 border border-amber-200 text-amber-800 font-extrabold text-xs py-3.5 px-4 rounded-xl shadow-sm uppercase tracking-wider text-center flex items-center justify-center gap-2">
                 <span>📍 Delivery point : Restaurant</span>
             </div>
         </div>
     </div>
 
-    <!-- Fixed Sticky Action Footer View -->
     <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 shadow-xl z-40">
         <div class="max-w-md mx-auto flex justify-between items-center">
             <div>
@@ -85,7 +76,6 @@
         </div>
     </div>
 
-    <!-- Checkout Verification Gateway Modal overlay screen layer -->
     <div id="payment-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             <div class="bg-red-700 text-white p-4 text-center">
@@ -99,9 +89,8 @@
                     <span class="text-2xl font-black text-red-700">₹<span id="modal-grand-total">0</span></span>
                 </div>
 
-                <!-- CRITICAL IMAGE RENDER FIX FOR GITHUB HOSTING: -->
                 <div class="flex justify-center my-2 p-2 bg-white border border-gray-200 rounded-2xl max-w-[220px] mx-auto shadow-inner">
-                    <img id="upi-qr-graphic" src="Screenshot_20260616-101025.png" alt="Payment QR Code" class="w-full h-auto object-contain block mx-auto" onerror="this.src='Screenshot_20260616-101025.PNG'">
+                    <img id="upi-qr-graphic" src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=upi://pay?pa=9154095125@ybl%26pn=A%20Bhaskar%26cu=INR" alt="Payment QR Code" class="w-full h-auto object-contain block mx-auto">
                 </div>
                 
                 <p class="text-[11px] font-bold text-gray-500 uppercase tracking-wide">Merchant Name: <span class="text-gray-800 font-extrabold">A Bhaskar</span></p>
@@ -270,6 +259,10 @@
                 alert("Please add at least one item to your cart before checking out!"); 
                 return; 
             }
+
+            // Generate deep linked dynamic UPI intent dynamic string structure 
+            const dynamicUPILink = `upi://pay?pa=9154095125@ybl&pn=A%20Bhaskar&am=${total}&cu=INR`;
+            document.getElementById('upi-qr-graphic').src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(dynamicUPILink)}`;
 
             document.getElementById('modal-grand-total').innerText = total;
             document.getElementById('payment-modal').classList.remove('hidden');
