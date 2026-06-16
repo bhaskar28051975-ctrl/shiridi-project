@@ -19,7 +19,6 @@
                 <img id="app-header-logo" src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120" class="w-12 h-12 object-cover rounded-xl border border-white/20 bg-white shrink-0" alt="Logo">
                 <div>
                     <h1 id="app-header-title" class="text-base font-black tracking-tight uppercase leading-tight">Sai Krishna Caterers</h1>
-                    <!-- DYNAMIC SUBTITLE: Controlled by Firebase shiridi_settings.subTitle -->
                     <p id="app-header-subtitle" class="text-[10px] text-red-100 uppercase tracking-widest font-semibold mt-0.5">Train percel service</p>
                 </div>
             </div>
@@ -61,12 +60,14 @@
                 <input type="tel" id="cust-phone" placeholder="Mobile Number" class="w-full border border-gray-300 p-2.5 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-700">
                 
                 <div>
-                    <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 px-1">Delivery Time / Train Info (Manual Entry)</label>
-                    <input type="text" id="cust-slot-manual" placeholder="e.g., Coach S4 - 12:40 PM" class="w-full border border-gray-300 p-2.5 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-700 bg-gray-50">
+                    <!-- Updated Label Definition -->
+                    <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 px-1">DELIVERY TIME ( MENTION AM OR PM )</label>
+                    <!-- Cleared Placeholder text context inside code -->
+                    <input type="text" id="cust-slot-manual" placeholder="" class="w-full border border-gray-300 p-2.5 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-700 bg-gray-50">
                 </div>
             </div>
 
-            <!-- Static Delivery Location Marker Block -->
+            <!-- Delivery Location Status Flag -->
             <div class="w-full bg-amber-50 border border-amber-200 text-amber-800 font-extrabold text-xs py-3.5 px-4 rounded-xl shadow-sm uppercase tracking-wider text-center flex items-center justify-center gap-2">
                 <span>📍 Delivery point : Restaurant</span>
             </div>
@@ -101,7 +102,8 @@
                 </div>
 
                 <div class="flex justify-center my-2 p-2 bg-white border border-gray-200 rounded-2xl max-w-[220px] mx-auto shadow-inner">
-                    <img id="upi-qr-graphic" src="AccountQRCodeAirtel Payments Bank Limited - 5125_LIGHT_THEME.png" alt="Payment QR Code" class="w-full h-auto object-contain">
+                    <!-- Adjusted Source target identifier directly referencing file: Screenshot_20260616-101025.png -->
+                    <img id="upi-qr-graphic" src="Screenshot_20260616-101025.png" alt="Payment QR Code" class="w-full h-auto object-contain">
                 </div>
                 
                 <p class="text-[11px] font-bold text-gray-500 uppercase tracking-wide">Merchant Name: <span class="text-gray-800 font-extrabold">A Bhaskar</span></p>
@@ -145,7 +147,6 @@
         let cartState = {};
         let selectedFileObject = null;
 
-        // Dynamic Realtime Synchronization System
         db.ref('shiridi_settings').on('value', snapshot => {
             const settings = snapshot.val() || {};
             const hotelName = settings.hotelName || "Sai Krishna Caterers";
