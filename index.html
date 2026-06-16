@@ -60,14 +60,12 @@
                 <input type="tel" id="cust-phone" placeholder="Mobile Number" class="w-full border border-gray-300 p-2.5 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-700">
                 
                 <div>
-                    <!-- Updated Label Definition -->
                     <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 px-1">DELIVERY TIME ( MENTION AM OR PM )</label>
-                    <!-- Cleared Placeholder text context inside code -->
                     <input type="text" id="cust-slot-manual" placeholder="" class="w-full border border-gray-300 p-2.5 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-700 bg-gray-50">
                 </div>
             </div>
 
-            <!-- Delivery Location Status Flag -->
+            <!-- Delivery Location Status Badge -->
             <div class="w-full bg-amber-50 border border-amber-200 text-amber-800 font-extrabold text-xs py-3.5 px-4 rounded-xl shadow-sm uppercase tracking-wider text-center flex items-center justify-center gap-2">
                 <span>📍 Delivery point : Restaurant</span>
             </div>
@@ -101,9 +99,9 @@
                     <span class="text-2xl font-black text-red-700">₹<span id="modal-grand-total">0</span></span>
                 </div>
 
+                <!-- CRITICAL IMAGE RENDER FIX FOR GITHUB HOSTING: -->
                 <div class="flex justify-center my-2 p-2 bg-white border border-gray-200 rounded-2xl max-w-[220px] mx-auto shadow-inner">
-                    <!-- Adjusted Source target identifier directly referencing file: Screenshot_20260616-101025.png -->
-                    <img id="upi-qr-graphic" src="Screenshot_20260616-101025.png" alt="Payment QR Code" class="w-full h-auto object-contain">
+                    <img id="upi-qr-graphic" src="Screenshot_20260616-101025.png" alt="Payment QR Code" class="w-full h-auto object-contain block mx-auto" onerror="this.src='Screenshot_20260616-101025.PNG'">
                 </div>
                 
                 <p class="text-[11px] font-bold text-gray-500 uppercase tracking-wide">Merchant Name: <span class="text-gray-800 font-extrabold">A Bhaskar</span></p>
