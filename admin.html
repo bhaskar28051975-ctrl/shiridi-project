@@ -56,7 +56,8 @@
                         </div>
                         <div>
                             <label class="block mb-1 text-gray-700 font-bold">Price (₹)</label>
-                            <input type="number" id="menu-price" class="w-full bg-gray-50 border border-gray-300 rounded p-2.5 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-600" placeholder="e.g., 140">
+                            <!-- EDITED: Changed type to "text" to allow letters, numbers, and symbols -->
+                            <input type="text" id="menu-price" class="w-full bg-gray-50 border border-gray-300 rounded p-2.5 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-600" placeholder="e.g., 140 or 140 / Plate">
                         </div>
                         <div>
                             <label class="block mb-1 text-gray-700 font-bold">Image URL</label>
@@ -79,8 +80,7 @@
 
             <div class="md:col-span-2 bg-white p-5 rounded-xl shadow border border-gray-200">
                 <h2 class="text-sm font-extrabold uppercase text-gray-800 mb-4 border-b border-gray-200 pb-2 tracking-wider">📋 Current Live Items</h2>
-                <div id="admin-menu-container" class="space-y-3 max-h-[78vh] overflow-y-auto pr-1">
-                    </div>
+                <div id="admin-menu-container" class="space-y-3 max-h-[78vh] overflow-y-auto pr-1"></div>
             </div>
         </div>
     </div>
@@ -99,7 +99,6 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Listen for global configuration updates natively from realtime database setup streams node
         db.ref('shiridi_settings').on('value', snapshot => {
             const settings = snapshot.val() || {};
             const hotelName = settings.hotelName || "Sai Krishna Caterers";
@@ -109,7 +108,6 @@
             document.getElementById('admin-header-title').innerText = hotelName + " Admin";
             document.getElementById('admin-header-logo').src = hotelImage;
             
-            // Populate inputs without breaking active focus states
             if(document.activeElement !== document.getElementById('setup-hotel-name')) {
                 document.getElementById('setup-hotel-name').value = hotelName;
             }
@@ -153,6 +151,8 @@
                 const item = data[key];
                 const row = document.createElement('div');
                 row.className = "flex items-center justify-between bg-gray-50 border border-gray-200 p-3 rounded-xl shadow-sm";
+                
+                // EDITED: Safely escaped strings inside the onclick edit function to avoid crashes with spaces/text values
                 row.innerHTML = `
                     <div class="flex items-center space-x-3">
                         <div class="w-12 h-12 overflow-hidden rounded-lg border border-gray-200 bg-white flex items-center justify-center shrink-0">
@@ -164,7 +164,7 @@
                         </div>
                     </div>
                     <div class="flex items-center space-x-2 text-xs">
-                        <button onclick="editItemForm('${key}', '${item.name}', ${item.price}, '${item.image}')" class="bg-white hover:bg-gray-100 border border-gray-300 text-gray-700 px-3 py-1.5 rounded font-bold shadow-sm transition">
+                        <button onclick="editItemForm('${key}', \`${item.name}\`, \`${item.price}\`, \`${item.image}\`)" class="bg-white hover:bg-gray-100 border border-gray-300 text-gray-700 px-3 py-1.5 rounded font-bold shadow-sm transition">
                             ✏️ Edit
                         </button>
                         <button onclick="deleteItem('${key}')" class="bg-red-50 hover:bg-red-100 text-red-700 px-3 py-1.5 rounded font-bold transition border border-red-200">
@@ -187,9 +187,10 @@
                 return;
             }
 
+            // EDITED: Saved 'price' directly as string text instead of parsing it to a strict number format
             const itemData = {
                 name: name,
-                price: Number(price),
+                price: price, 
                 image: image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120"
             };
 
