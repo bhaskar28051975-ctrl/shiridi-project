@@ -11,6 +11,7 @@
 </head>
 <body class="bg-gray-50 text-gray-900 min-h-screen font-sans pb-24">
 
+    <!-- Header Section -->
     <div class="bg-red-700 text-white sticky top-0 z-50 px-4 py-3 shadow-md">
         <div class="max-w-md mx-auto flex justify-between items-center">
             <div class="flex items-center space-x-3">
@@ -31,20 +32,24 @@
         </div>
     </div>
 
+    <!-- Banner Image -->
     <div class="max-w-md mx-auto px-4 mt-4">
         <img id="app-banner-image" src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800" class="w-full h-44 object-cover rounded-2xl shadow-sm border border-gray-100 bg-gray-200" alt="Hotel Banner">
     </div>
 
+    <!-- Main Content Section -->
     <div class="max-w-md mx-auto px-4 mt-6">
         <div class="flex items-center gap-3 mb-6">
             <div class="w-1.5 h-7 bg-red-700 rounded-full"></div>
             <h2 class="text-lg font-extrabold uppercase text-gray-800 tracking-wide">Select Food Items</h2>
         </div>
 
+        <!-- Menu Grid Container -->
         <div id="menu-container" class="grid grid-cols-2 gap-4">
             <p class="col-span-2 text-center text-sm text-gray-400 py-8">Loading fresh dishes from database...</p>
         </div>
 
+        <!-- Customer Form Section -->
         <div class="mt-8 bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-4">
             <h3 class="text-xs font-black uppercase text-red-700 tracking-wider border-b pb-2">Delivery & Customer Details</h3>
             
@@ -64,6 +69,7 @@
         </div>
     </div>
 
+    <!-- Bottom Action Total Bar -->
     <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 shadow-xl z-40">
         <div class="max-w-md mx-auto flex justify-between items-center">
             <div>
@@ -76,6 +82,7 @@
         </div>
     </div>
 
+    <!-- Payment Gateway Modal -->
     <div id="payment-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             <div class="bg-red-700 text-white p-4 text-center">
@@ -126,6 +133,7 @@
         </div>
     </div>
 
+    <!-- Operational Core JavaScript -->
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBjG-vnr8B4-tQpPyflqdY99OBvLuZRkoc",
@@ -203,15 +211,27 @@
             Object.keys(data).forEach(key => {
                 const item = data[key];
                 
-                // EDITED: Clean text parameters securely to isolate clean operational numeric outputs safely
-                const rawPrice = String(item.price || "0");
-                const numericPrice = parseFloat(rawPrice.replace(/[^0-9.]/g, '')) || 0;
+                let rawPrice = String(item.price || "0").trim();
+                
+                // Safety logic check to instantly handle a corrupted database string containing NaN
+                if (rawPrice.toLowerCase() === "nan" || rawPrice === "") {
+                    rawPrice = "0";
+                }
+
+                // Strip away all non-numeric text content safely to ensure computations work flawlessly
+                let cleanedPriceStr = rawPrice.replace(/[^0-9.]/g, '');
+                let numericPrice = parseFloat(cleanedPriceStr);
+                
+                // Final validation check to guarantee no NaN values slip through to global state
+                if (isNaN(numericPrice)) {
+                    numericPrice = 0;
+                }
 
                 globalProducts.push({
                     id: key,
                     name: item.name,
-                    price: numericPrice,           // Used backend calculation tasks
-                    displayPrice: rawPrice,        // Displayed to users on UI
+                    price: numericPrice,           
+                    displayPrice: rawPrice === "0" ? "0" : rawPrice,        
                     img: item.image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400"
                 });
             });
@@ -228,7 +248,6 @@
                 const card = document.createElement('div');
                 card.className = "bg-white border border-gray-200 rounded-3xl p-4 flex flex-col items-center justify-between text-center relative shadow-sm hover:border-red-200 transition";
                 
-                // EDITED: Changed item.price to item.displayPrice to support alphanumeric values cleanly
                 card.innerHTML = `
                     <div class="w-full aspect-square flex items-center justify-center mb-2 overflow-hidden rounded-xl bg-gray-50 border border-gray-100">
                         <img src="${item.img}" alt="${item.name}" class="w-full h-full object-cover" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'">
@@ -256,7 +275,13 @@
 
         function calculateTotals() {
             let total = 0;
-            globalProducts.forEach(item => { if(cartState[item.id]) total += (cartState[item.id] * item.price); });
+            globalProducts.forEach(item => { 
+                if(cartState[item.id]) {
+                    let priceVal = parseFloat(item.price);
+                    if(isNaN(priceVal)) priceVal = 0;
+                    total += (cartState[item.id] * priceVal); 
+                }
+            });
             document.getElementById('ui-grand-total').innerText = total;
             return total;
         }
@@ -349,7 +374,7 @@
                 .then((data) => {
                     alert("🎉 Order Booked Successfully! Opening WhatsApp to forward payment receipt confirmation.");
                     
-                    const textMessageTemplate = `Hello Sai Krishna Caterers, I have placed an order!\n\n` +
+                    const textMessageTemplate = `Hello Balaji Take Away Tirupati, I have placed an order!\n\n` +
                                                 `👤 *Name:* ${name}\n` +
                                                 `📞 *Phone:* ${phone}\n` +
                                                 `🍱 *Items:* ${data.itemsSummaryText}\n` +
