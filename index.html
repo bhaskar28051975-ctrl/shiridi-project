@@ -22,8 +22,9 @@
                 </div>
             </div>
             <div class="flex flex-col gap-1.5 shrink-0">
-                <button onclick="shareApp()" class="bg-green-600 hover:bg-green-700 text-white font-bold text-[10px] px-2.5 py-1 rounded-md tracking-wider uppercase shadow-sm flex items-center justify-center gap-1 transition">
-                    Share 🔗
+                <!-- Replaced with WhatsApp Share button -->
+                <button onclick="openShareModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] px-2.5 py-1 rounded-md tracking-wider uppercase shadow-sm flex items-center justify-center gap-1 transition">
+                    Share WhatsApp 💬
                 </button>
                 <button onclick="window.location.reload()" class="bg-white/10 hover:bg-white/20 text-white font-bold text-[10px] px-2.5 py-1 rounded-md tracking-wider uppercase border border-white/20 transition">
                     Refresh
@@ -79,6 +80,33 @@
             <button onclick="openPaymentModal()" class="bg-red-700 hover:bg-red-800 text-white font-extrabold text-sm px-6 py-3 rounded-xl shadow-md uppercase tracking-wider transition">
                 Place Order 🚀
             </button>
+        </div>
+    </div>
+
+    <!-- Share Application Modal -->
+    <div id="share-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <div class="bg-emerald-600 text-white p-4 text-center">
+                <h3 class="font-black uppercase tracking-wider text-sm">Share App on WhatsApp</h3>
+                <p class="text-xs text-emerald-100 mt-1">Enter your friend's WhatsApp number to share</p>
+            </div>
+
+            <div class="p-5 space-y-4">
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 px-1">Recipient's WhatsApp Number</label>
+                    <input type="tel" id="share-whatsapp-number" placeholder="Enter 10-digit mobile number" class="w-full border border-gray-300 p-2.5 rounded-xl text-sm font-semibold focus:outline-none focus:border-emerald-600">
+                    <p class="text-[10px] text-gray-400 mt-1 px-1">Referral link tracks points using your profile mobile number.</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 pt-2">
+                    <button onclick="closeShareModal()" class="border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs font-bold py-3 rounded-xl uppercase tracking-wider transition">
+                        Cancel
+                    </button>
+                    <button onclick="submitShareApp()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold py-3 rounded-xl uppercase tracking-wider transition shadow-md">
+                        Send Link 🚀
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -180,7 +208,8 @@
             }
         };
 
-        function shareApp() {
+        // NEW: Modal Operations for Sharing Interface
+        function openShareModal() {
             let phoneField = document.getElementById('cust-phone');
             let phone = phoneField.value.trim();
             
@@ -193,16 +222,49 @@
                     return;
                 }
             }
+            document.getElementById('share-whatsapp-number').value = "";
+            document.getElementById('share-modal').classList.remove('hidden');
+        }
+
+        function closeShareModal() {
+            document.getElementById('share-modal').classList.add('hidden');
+        }
+
+        function submitShareApp() {
+            const targetPhoneField = document.getElementById('share-whatsapp-number');
+            let targetPhone = targetPhoneField.value.trim();
             
-            const shareUrl = window.location.origin + window.location.pathname + "?ref=" + phone;
+            if(!targetPhone) {
+                alert("Please enter a valid WhatsApp number.");
+                return;
+            }
             
-            navigator.clipboard.writeText(shareUrl).then(() => {
-                alert("✨ Tracking referral link copied successfully! Send this link to your friends to earn reward points.");
-                db.ref('app_shares').push({
-                    referrer: phone,
-                    timestamp: new Date().toISOString()
-                });
+            // Basic numeric formatting
+            targetPhone = targetPhone.replace(/[^0-9]/g, '');
+            if(targetPhone.length < 10) {
+                alert("Please enter a valid 10-digit WhatsApp number.");
+                return;
+            }
+            if(targetPhone.length === 10) {
+                targetPhone = "91" + targetPhone; // Prefix Indian country code if not present
+            }
+
+            const referralPhone = document.getElementById('cust-phone').value.trim();
+            const shareUrl = window.location.origin + window.location.pathname + "?ref=" + referralPhone;
+            
+            const message = `Hello! Try ordering delicious food online from our platform using this link: ${shareUrl}`;
+            const encodedMsg = encodeURIComponent(message);
+            const whatsappUrl = `https://wa.me/${targetPhone}?text=${encodedMsg}`;
+
+            // Track referral event to database
+            db.ref('app_shares').push({
+                referrer: referralPhone,
+                sharedTo: targetPhone,
+                timestamp: new Date().toISOString()
             });
+
+            closeShareModal();
+            window.open(whatsappUrl, '_blank');
         }
 
         db.ref('shiridi_menu').on('value', snapshot => {
@@ -213,16 +275,13 @@
                 
                 let rawPrice = String(item.price || "0").trim();
                 
-                // Safety logic check to instantly handle a corrupted database string containing NaN
                 if (rawPrice.toLowerCase() === "nan" || rawPrice === "") {
                     rawPrice = "0";
                 }
 
-                // Strip away all non-numeric text content safely to ensure computations work flawlessly
                 let cleanedPriceStr = rawPrice.replace(/[^0-9.]/g, '');
                 let numericPrice = parseFloat(cleanedPriceStr);
                 
-                // Final validation check to guarantee no NaN values slip through to global state
                 if (isNaN(numericPrice)) {
                     numericPrice = 0;
                 }
