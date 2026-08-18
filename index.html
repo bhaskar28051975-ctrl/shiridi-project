@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-storage-compat.js"></script>
 </head>
 <body class="bg-gray-50 text-gray-900 min-h-screen font-sans pb-24">
 
@@ -22,7 +21,6 @@
                 </div>
             </div>
             <div class="flex flex-col gap-1.5 shrink-0">
-                <!-- WhatsApp Share Button -->
                 <button onclick="openShareModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] px-2.5 py-1 rounded-md tracking-wider uppercase shadow-sm flex items-center justify-center gap-1 transition">
                     Share WhatsApp 💬
                 </button>
@@ -109,51 +107,35 @@
         </div>
     </div>
 
-    <!-- Payment Gateway Modal -->
+    <!-- Normal QR Code Payment Modal -->
     <div id="payment-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             <div class="bg-red-700 text-white p-4 text-center">
-                <h3 class="font-black uppercase tracking-wider text-sm">Complete Your Payment</h3>
-                <p class="text-xs text-red-100 mt-1">Pay instantly via UPI or scan the code below</p>
+                <h3 class="font-black uppercase tracking-wider text-sm">Scan QR Code to Pay</h3>
+                <p class="text-xs text-red-100 mt-1">Scan using any UPI app (PhonePe / GPay / PayTM)</p>
             </div>
 
             <div class="p-5 space-y-4 text-center">
-                <div class="bg-gray-50 py-3 rounded-xl border border-gray-100">
-                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider block">Amount To Pay</span>
+                <div class="bg-gray-50 py-2.5 rounded-xl border border-gray-100">
+                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider block">Total Payable Amount</span>
                     <span class="text-2xl font-black text-red-700">₹<span id="modal-grand-total">0</span></span>
                 </div>
 
-                <div class="px-2">
-                    <a id="direct-upi-intent-btn" href="#" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black text-xs py-3 px-4 rounded-xl shadow-md uppercase tracking-wider flex items-center justify-center gap-2 transition">
-                        📱 Tap to Pay via Any UPI App
-                    </a>
-                    <div class="relative flex py-2 items-center">
-                        <div class="flex-grow border-t border-gray-200"></div>
-                        <span class="flex-shrink mx-3 text-[10px] text-gray-400 font-bold uppercase tracking-widest">Or Scan QR Code</span>
-                        <div class="flex-grow border-t border-gray-200"></div>
-                    </div>
-                </div>
-
-                <div class="flex justify-center p-2 bg-white border border-gray-200 rounded-2xl max-w-[200px] mx-auto shadow-inner">
-                    <img id="upi-qr-graphic" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=9154095125@ybl%26pn=A%20Bhaskar%26cu=INR" alt="Payment QR Code" class="w-full h-auto object-contain block mx-auto">
+                <div class="flex justify-center p-3 bg-white border border-gray-200 rounded-2xl max-w-[210px] mx-auto shadow-inner">
+                    <img id="upi-qr-graphic" src="" alt="Payment QR Code" class="w-full h-auto object-contain block mx-auto">
                 </div>
                 
-                <p class="text-[11px] font-bold text-gray-500 uppercase tracking-wide">Merchant Name: <span class="text-gray-800 font-extrabold">A Bhaskar</span></p>
-
-                <div class="text-left space-y-1">
-                    <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-wider px-1">Upload Payment Receipt Screenshot:</label>
-                    <div class="relative border-2 border-dashed border-gray-300 rounded-xl p-3 hover:border-red-500 transition bg-gray-50 text-center cursor-pointer">
-                        <input type="file" id="payment-screenshot-file" accept="image/*" onchange="handleFileSelectedLabel(this)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
-                        <span id="file-upload-placeholder" class="text-xs font-bold text-gray-600 block">📁 Click to Select Image From Gallery</span>
-                    </div>
+                <div class="bg-gray-50 p-2 rounded-xl border border-gray-100">
+                    <p class="text-[11px] font-bold text-gray-500 uppercase tracking-wide">Merchant: <span class="text-gray-800 font-extrabold">A Bhaskar</span></p>
+                    <p class="text-[11px] font-bold text-gray-500 uppercase tracking-wide mt-0.5">UPI ID: <span class="text-red-700 font-black">9154095125@ybl</span></p>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3 pt-2">
+                <div class="grid grid-cols-2 gap-3 pt-1">
                     <button onclick="closePaymentModal()" class="border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs font-bold py-3 rounded-xl uppercase tracking-wider transition">
                         Cancel
                     </button>
                     <button id="submit-order-btn" onclick="processFinalReceiptOrder()" class="bg-green-600 hover:bg-green-700 text-white text-xs font-extrabold py-3 rounded-xl uppercase tracking-wider transition shadow-md">
-                        👍 I Have Paid
+                        Confirm Order 🚀
                     </button>
                 </div>
             </div>
@@ -174,11 +156,9 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        const storage = firebase.storage();
 
         let globalProducts = [];
         let cartState = {};
-        let selectedFileObject = null;
 
         db.ref('shiridi_settings').on('value', snapshot => {
             const settings = snapshot.val() || {};
@@ -194,7 +174,6 @@
             document.getElementById('app-header-subtitle').innerText = subTitle;
         });
 
-        // WhatsApp Share Popup Handling
         function openShareModal() {
             document.getElementById('share-whatsapp-number').value = "";
             document.getElementById('share-modal').classList.remove('hidden');
@@ -213,17 +192,15 @@
                 return;
             }
             
-            // Clean up the input string
             targetPhone = targetPhone.replace(/[^0-9]/g, '');
             if(targetPhone.length < 10) {
                 alert("Please enter a valid 10-digit WhatsApp number.");
                 return;
             }
             if(targetPhone.length === 10) {
-                targetPhone = "91" + targetPhone; // Prefix with India's country code (91)
+                targetPhone = "91" + targetPhone;
             }
 
-            // Construct sharing url dynamically (without any referral tracking parameters)
             const cleanAppUrl = window.location.origin + window.location.pathname;
             const message = `Hello! Try ordering delicious food online from our platform using this link: ${cleanAppUrl}`;
             const encodedMsg = encodeURIComponent(message);
@@ -240,7 +217,6 @@
                 const item = data[key];
                 
                 let rawPrice = String(item.price || "0").trim();
-                
                 if (rawPrice.toLowerCase() === "nan" || rawPrice === "") {
                     rawPrice = "0";
                 }
@@ -329,29 +305,16 @@
                 return; 
             }
 
-            const dynamicUPILink = `upi://pay?pa=9154095125@ybl&pn=A%20Bhaskar&am=${total}&cu=INR`;
-            
-            document.getElementById('direct-upi-intent-btn').href = dynamicUPILink;
-            document.getElementById('upi-qr-graphic').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(dynamicUPILink)}`;
-
+            const upiString = `upi://pay?pa=9154095125@ybl&pn=A%20Bhaskar&am=${total}&cu=INR`;
+            document.getElementById('upi-qr-graphic').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiString)}`;
             document.getElementById('modal-grand-total').innerText = total;
             document.getElementById('payment-modal').classList.remove('hidden');
         }
 
         function closePaymentModal() {
             document.getElementById('payment-modal').classList.add('hidden');
-            selectedFileObject = null;
-            document.getElementById('payment-screenshot-file').value = "";
-            document.getElementById('file-upload-placeholder').innerText = "📁 Click to Select Image From Gallery";
-            document.getElementById('submit-order-btn').innerText = "👍 I Have Paid";
+            document.getElementById('submit-order-btn').innerText = "Confirm Order 🚀";
             document.getElementById('submit-order-btn').disabled = false;
-        }
-
-        function handleFileSelectedLabel(inputElement) {
-            if (inputElement.files && inputElement.files[0]) {
-                selectedFileObject = inputElement.files[0];
-                document.getElementById('file-upload-placeholder').innerText = `✅ Selected: ${selectedFileObject.name.substring(0, 20)}...`;
-            }
         }
 
         function processFinalReceiptOrder() {
@@ -361,71 +324,54 @@
             const total = calculateTotals();
             const submitBtn = document.getElementById('submit-order-btn');
 
-            if(!selectedFileObject) {
-                alert("Please upload your payment transaction receipt screenshot from your gallery to verify payment!");
-                return;
-            }
-
-            submitBtn.innerText = "⏳ Uploading Proof...";
+            submitBtn.innerText = "⏳ Saving Order...";
             submitBtn.disabled = true;
 
-            const storagePathRef = storage.ref('receipts/' + Date.now() + '_' + selectedFileObject.name);
-            
-            storagePathRef.put(selectedFileObject)
-                .then(snapshot => snapshot.ref.getDownloadURL())
-                .then(uploadedUrl => {
-                    let itemsSummaryParts = [];
-                    globalProducts.forEach(i => { if(cartState[i.id]) itemsSummaryParts.push(`${i.name} (${cartState[i.id]}x)`); });
+            let itemsSummaryParts = [];
+            globalProducts.forEach(i => { if(cartState[i.id]) itemsSummaryParts.push(`${i.name} (${cartState[i.id]}x)`); });
 
-                    const now = new Date();
-                    const itemsSummaryText = itemsSummaryParts.join(", ");
-                    const finalProcessedOrder = {
-                        customerName: name,
-                        customerPhone: phone,
-                        deliveryTimeSlot: manualSlot,
-                        itemsSummary: itemsSummaryText,
-                        grandTotal: total,
-                        status: "Received",
-                        paymentVerified: false,
-                        receiptScreenshot: uploadedUrl,
-                        dateStr: now.toLocaleDateString('en-IN'),
-                        timeStr: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
-                    };
+            const now = new Date();
+            const itemsSummaryText = itemsSummaryParts.join(", ");
+            const finalProcessedOrder = {
+                customerName: name,
+                customerPhone: phone,
+                deliveryTimeSlot: manualSlot,
+                itemsSummary: itemsSummaryText,
+                grandTotal: total,
+                status: "Received",
+                paymentMethod: "QR Code UPI",
+                dateStr: now.toLocaleDateString('en-IN'),
+                timeStr: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+            };
 
-                    return db.ref('shiridi_orders').push(finalProcessedOrder).then(() => {
-                        return { uploadedUrl, itemsSummaryText };
-                    });
-                })
-                .then((data) => {
-                    alert("🎉 Order Booked Successfully! Opening WhatsApp to forward payment receipt confirmation.");
-                    
-                    const textMessageTemplate = `Hello Balaji Take Away Tirupati, I have placed an order!\n\n` +
-                                                `👤 *Name:* ${name}\n` +
-                                                `📞 *Phone:* ${phone}\n` +
-                                                `🍱 *Items:* ${data.itemsSummaryText}\n` +
-                                                `💰 *Total Amount:* ₹${total}\n` +
-                                                `📍 *Delivery Slot:* ${manualSlot}\n\n` +
-                                                `🖼️ *Payment Link:* ${data.uploadedUrl}\n\n` +
-                                                `Please accept my order. Thank you! 🙏`;
+            db.ref('shiridi_orders').push(finalProcessedOrder).then(() => {
+                alert("🎉 Order Booked Successfully! Opening WhatsApp to send order confirmation.");
+                
+                const textMessageTemplate = `Hello Balaji Take Away Tirupati, I have placed an order!\n\n` +
+                                            `👤 *Name:* ${name}\n` +
+                                            `📞 *Phone:* ${phone}\n` +
+                                            `🍱 *Items:* ${itemsSummaryText}\n` +
+                                            `💰 *Total Amount:* ₹${total}\n` +
+                                            `📍 *Delivery Slot:* ${manualSlot}\n\n` +
+                                            `Please accept my order. Thank you! 🙏`;
 
-                    const encodedMessage = encodeURIComponent(textMessageTemplate);
-                    const whatsappRedirectEndpoint = `https://wa.me/919154095125?text=${encodedMessage}`;
-                    
-                    window.open(whatsappRedirectEndpoint, '_blank');
+                const encodedMessage = encodeURIComponent(textMessageTemplate);
+                const whatsappRedirectEndpoint = `https://wa.me/919154095125?text=${encodedMessage}`;
+                
+                window.open(whatsappRedirectEndpoint, '_blank');
 
-                    closePaymentModal();
-                    cartState = {};
-                    document.getElementById('cust-name').value = '';
-                    document.getElementById('cust-phone').value = '';
-                    document.getElementById('cust-slot-manual').value = '';
-                    renderMenuUI();
-                    calculateTotals();
-                })
-                .catch(err => {
-                    alert("Error booking order process failed: " + err.message);
-                    submitBtn.innerText = "👍 I Have Paid";
-                    submitBtn.disabled = false;
-                });
+                closePaymentModal();
+                cartState = {};
+                document.getElementById('cust-name').value = '';
+                document.getElementById('cust-phone').value = '';
+                document.getElementById('cust-slot-manual').value = '';
+                renderMenuUI();
+                calculateTotals();
+            }).catch(err => {
+                alert("Error booking order process failed: " + err.message);
+                submitBtn.innerText = "Confirm Order 🚀";
+                submitBtn.disabled = false;
+            });
         }
     </script>
 </body>
