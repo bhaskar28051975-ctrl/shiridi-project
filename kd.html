@@ -10,28 +10,40 @@
 </head>
 <body class="bg-gray-50 text-gray-900 min-h-screen p-4 font-sans">
 
+    <!-- Auth Lock Screen Modal -->
+    <div id="auth-modal" class="fixed inset-0 bg-gray-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-white border border-gray-200 p-6 rounded-2xl max-w-sm w-full shadow-2xl space-y-4 text-gray-900">
+            <div class="text-center">
+                <span class="text-3xl">🔒</span>
+                <h2 class="text-xl font-bold mt-2">Kitchen Display Lock</h2>
+                <p class="text-xs text-gray-500">Enter User ID & Password to access KD</p>
+            </div>
+            <div class="space-y-3 text-xs">
+                <div><label class="block mb-1 font-bold">User ID</label><input type="text" id="auth-userid" class="w-full bg-gray-50 border border-gray-300 rounded p-2.5"></div>
+                <div><label class="block mb-1 font-bold">Password</label><input type="password" id="auth-password" class="w-full bg-gray-50 border border-gray-300 rounded p-2.5"></div>
+                <button onclick="attemptLogin('kd')" class="w-full bg-red-700 hover:bg-red-800 text-white font-extrabold py-3 rounded uppercase text-xs">Verify Access</button>
+            </div>
+        </div>
+    </div>
+
     <div class="max-w-4xl mx-auto">
-        <!-- Header Banner -->
         <div class="bg-red-700 text-white p-5 rounded-xl shadow-md mb-6 flex justify-between items-center">
             <div>
                 <h1 class="text-2xl font-extrabold tracking-tight">Sai Krishna Kitchen Display</h1>
                 <p class="text-xs text-red-100 uppercase tracking-widest font-semibold mt-0.5">Live Pending Train Orders</p>
             </div>
-            <!-- Live Active Count Badge -->
-            <div class="bg-white/10 px-4 py-2 rounded-lg backdrop-blur-sm border border-white/10 text-center">
-                <span class="block text-xs text-red-100 font-medium uppercase tracking-wider">Pending Tasks</span>
-                <span id="count-pending" class="text-xl font-black">0</span>
+            <div class="flex items-center gap-3">
+                <div class="bg-white/10 px-4 py-1.5 rounded-lg border border-white/10 text-center">
+                    <span class="block text-[10px] text-red-100 uppercase font-medium">Pending Tasks</span>
+                    <span id="count-pending" class="text-lg font-black">0</span>
+                </div>
+                <button onclick="logout()" class="bg-red-900/50 hover:bg-red-900 text-white text-xs font-bold px-3 py-1.5 rounded-lg border border-red-500/30">Logout 🚪</button>
             </div>
         </div>
 
-        <!-- Live Active Orders Container -->
         <div class="space-y-4">
-            <h2 class="text-sm font-extrabold uppercase text-red-700 tracking-wider border-b border-gray-200 pb-2 flex items-center gap-2">
-                🔥 Active Kitchen Orders
-            </h2>
-            <div id="active-orders-container" class="space-y-4 max-h-[80vh] overflow-y-auto pr-1">
-                <p class="text-sm text-gray-500 text-center py-8 bg-white rounded-xl border border-gray-200 shadow-sm">Waiting for incoming food parcel orders...</p>
-            </div>
+            <h2 class="text-sm font-extrabold uppercase text-red-700 tracking-wider border-b border-gray-200 pb-2">🔥 Active Kitchen Orders</h2>
+            <div id="active-orders-container" class="space-y-4 max-h-[80vh] overflow-y-auto pr-1"></div>
         </div>
     </div>
 
@@ -49,90 +61,72 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Realtime sync tracking for Pending Kitchen Orders
+        function checkSession() {
+            const session = JSON.parse(sessionStorage.getItem('shiridi_user'));
+            if (session && session.perms && session.perms.kd) {
+                document.getElementById('auth-modal').classList.add('hidden');
+            } else {
+                document.getElementById('auth-modal').classList.remove('hidden');
+            }
+        }
+
+        function attemptLogin(page) {
+            const u = document.getElementById('auth-userid').value.trim();
+            const p = document.getElementById('auth-password').value.trim();
+            if (!u || !p) return alert("Enter User ID and Password.");
+
+            db.ref(`shiridi_settings/users/${u}`).once('value', snapshot => {
+                const userData = snapshot.val();
+                if (userData && userData.password === p) {
+                    if (userData.perms && userData.perms[page]) {
+                        sessionStorage.setItem('shiridi_user', JSON.stringify({ userId: u, perms: userData.perms }));
+                        checkSession();
+                    } else { alert("Access Denied for KD screen."); }
+                } else { alert("Invalid User ID or Password."); }
+            });
+        }
+
+        function logout() {
+            sessionStorage.removeItem('shiridi_user');
+            location.reload();
+        }
+
         db.ref('shiridi_orders').on('value', snapshot => {
             const orders = snapshot.val() || {};
             const activeContainer = document.getElementById('active-orders-container');
             activeContainer.innerHTML = '';
-
             let countPending = 0;
-            const orderKeys = Object.keys(orders).reverse(); // Newest orders showing up at top
-
-            orderKeys.forEach(key => {
+            
+            Object.keys(orders).reverse().forEach(key => {
                 const order = orders[key];
-
                 if(order.status === "Received") {
                     countPending++;
-                    
                     const card = document.createElement('div');
-                    card.className = "bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden hover:border-red-200 transition";
-                    
-                    const imageScreenshotUrl = order.receiptScreenshot || "#";
-                    const hasValidImage = order.receiptScreenshot ? true : false;
-
+                    card.className = "bg-white border border-gray-200 rounded-xl shadow-sm p-4";
                     card.innerHTML = `
-                        <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center flex-wrap gap-2">
-                            <div>
-                                <h3 class="font-extrabold text-sm text-gray-900">${order.customerName}</h3>
-                                <p class="text-[11px] text-gray-500 font-medium">📞 ${order.customerPhone} | 🕒 Slot: <span class="text-red-700 font-bold">${order.deliveryTimeSlot || 'Not Picked'}</span></p>
-                            </div>
-                            <div>
-                                <span class="text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-md uppercase tracking-tight">Preparing</span>
-                            </div>
+                        <div class="flex justify-between font-bold text-sm">
+                            <span>${order.customerName} (📞 ${order.customerPhone})</span>
+                            <span class="text-red-700">Slot: ${order.deliveryTimeSlot || 'Not Picked'}</span>
                         </div>
-                        <div class="p-4 flex flex-col md:flex-row gap-4 items-start justify-between">
-                            
-                            <!-- Left Display Side: Summary Metrics -->
-                            <div class="space-y-3 flex-1 w-full">
-                                <div class="bg-gray-50 border border-gray-200 p-3 rounded-lg text-sm font-bold text-red-800 leading-relaxed shadow-inner">
-                                    🍱 ${order.itemsSummary}
-                                </div>
-                                <div class="text-sm font-extrabold text-gray-800">
-                                    Total Amount: <span class="text-red-700 text-base">₹${order.grandTotal}</span>
-                                </div>
-                                <div class="flex gap-2 w-full pt-1">
-                                    <button onclick="togglePaymentStatus('${key}', ${order.paymentVerified})" class="flex-1 text-xs px-3 py-2 rounded border transition font-bold ${order.paymentVerified ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'}">
-                                        ${order.paymentVerified ? '💸 Paid (Verified)' : '⚠️ Mark Paid'}
-                                    </button>
-                                    <button onclick="completeOrder('${key}')" class="flex-1 bg-red-700 hover:bg-red-800 text-white font-bold text-xs px-4 py-2 rounded transition shadow-sm uppercase tracking-wide">
-                                        ✔️ Dispatch & Close
-                                    </button>
-                                </div>
+                        <div class="my-2 bg-gray-50 p-2 rounded text-xs font-bold text-red-800">🍱 ${order.itemsSummary}</div>
+                        <div class="flex justify-between items-center pt-2">
+                            <span class="font-extrabold">₹${order.grandTotal}</span>
+                            <div class="flex gap-2">
+                                <button onclick="togglePaymentStatus('${key}', ${order.paymentVerified})" class="text-xs px-3 py-1 rounded border font-bold ${order.paymentVerified ? 'bg-green-50 text-green-700' : 'bg-gray-100'}">${order.paymentVerified ? '💸 Paid' : '⚠️ Mark Paid'}</button>
+                                <button onclick="completeOrder('${key}')" class="bg-red-700 text-white font-bold text-xs px-3 py-1 rounded uppercase">✔️ Dispatch</button>
                             </div>
-
-                            <!-- Right Display Side: Live Image Screenshot Preview Box -->
-                            <div class="w-full md:w-32 shrink-0 flex flex-col items-center bg-gray-50 border border-gray-200 p-2 rounded-xl text-center">
-                                <span class="text-[10px] font-black uppercase text-gray-400 tracking-wider block mb-1">Receipt Proof</span>
-                                ${hasValidImage ? `
-                                    <a href="${imageScreenshotUrl}" target="_blank" title="Click to view full screen">
-                                        <img src="${imageScreenshotUrl}" class="w-24 h-24 object-cover rounded-lg border border-gray-300 shadow-sm hover:scale-105 active:scale-95 transition cursor-pointer bg-white" alt="Transaction Proof">
-                                    </a>
-                                    <span class="text-[9px] text-gray-400 mt-1 font-semibold">🔍 Click to Expand</span>
-                                ` : `
-                                    <div class="w-24 h-24 flex items-center justify-center bg-gray-200 text-gray-400 rounded-lg text-xs font-bold">No Image</div>
-                                `}
-                            </div>
-
-                        </div>
-                    `;
+                        </div>`;
                     activeContainer.appendChild(card);
                 }
             });
-
             document.getElementById('count-pending').innerText = countPending;
-
-            if (countPending === 0) {
-                activeContainer.innerHTML = `<p class="text-sm text-gray-500 text-center py-8 bg-white rounded-xl border border-gray-200 shadow-sm">All cleared! No active kitchen tickets right now. 🎉</p>`;
-            }
+            if (countPending === 0) activeContainer.innerHTML = `<p class="text-sm text-gray-500 text-center py-8">All cleared! No active kitchen tickets right now. 🎉</p>`;
         });
 
-        function togglePaymentStatus(key, currentFlag) {
-            db.ref(`shiridi_orders/${key}`).update({ paymentVerified: !currentFlag });
-        }
+        function togglePaymentStatus(key, currentFlag) { db.ref(`shiridi_orders/${key}`).update({ paymentVerified: !currentFlag }); }
+        function completeOrder(key) { db.ref(`shiridi_orders/${key}`).update({ status: "Completed" }); }
 
-        function completeOrder(key) {
-            db.ref(`shiridi_orders/${key}`).update({ status: "Completed" });
-        }
+        window.onload = checkSession;
     </script>
 </body>
 </html>
