@@ -52,17 +52,17 @@
             <p class="col-span-2 text-center text-sm text-gray-400 py-8">Loading fresh dishes from database...</p>
         </div>
 
-        <!-- Customer Form Section -->
-        <div class="mt-8 bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-4">
+        <!-- Customer Form Section (Added ID for smooth scrolling) -->
+        <div id="customer-details-section" class="mt-8 bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-4 scroll-mt-20">
             <h3 class="text-xs font-black uppercase text-red-700 tracking-wider border-b pb-2">Delivery & Customer Details</h3>
             
             <div class="space-y-3">
-                <input type="text" id="cust-name" placeholder="Customer Name" class="w-full border border-gray-300 p-2.5 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-700">
-                <input type="tel" id="cust-phone" placeholder="Mobile Number" class="w-full border border-gray-300 p-2.5 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-700">
+                <input type="text" id="cust-name" placeholder="Customer Name" class="w-full border border-gray-300 p-2.5 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-700 transition">
+                <input type="tel" id="cust-phone" placeholder="Mobile Number" class="w-full border border-gray-300 p-2.5 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-700 transition">
                 
                 <div>
                     <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1 px-1">DELIVERY TIME ( MENTION AM OR PM )</label>
-                    <input type="text" id="cust-slot-manual" placeholder="" class="w-full border border-gray-300 p-2.5 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-700 bg-gray-50">
+                    <input type="text" id="cust-slot-manual" placeholder="" class="w-full border border-gray-300 p-2.5 rounded-xl text-sm font-semibold focus:outline-none focus:border-red-700 bg-gray-50 transition">
                 </div>
             </div>
 
@@ -146,7 +146,7 @@
         </div>
     </div>
 
-    <!-- Operational Core JavaScript -->
+    <!-- Operational JavaScript -->
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBjG-vnr8B4-tQpPyflqdY99OBvLuZRkoc",
@@ -308,16 +308,6 @@
         }
 
         function openPaymentModal() {
-            const name = document.getElementById('cust-name').value.trim();
-            const phone = document.getElementById('cust-phone').value.trim();
-            const manualSlot = document.getElementById('cust-slot-manual').value.trim();
-            const total = calculateTotals();
-
-            if(!name || !phone || !manualSlot) { 
-                alert("Please fill in Name, Mobile Number, and Delivery details before placing an order."); 
-                return; 
-            }
-
             let cartCount = 0;
             globalProducts.forEach(i => { if(cartState[i.id]) cartCount += cartState[i.id]; });
             if(cartCount === 0) { 
@@ -325,6 +315,29 @@
                 return; 
             }
 
+            const nameInput = document.getElementById('cust-name');
+            const phoneInput = document.getElementById('cust-phone');
+            const slotInput = document.getElementById('cust-slot-manual');
+
+            const name = nameInput.value.trim();
+            const phone = phoneInput.value.trim();
+            const manualSlot = slotInput.value.trim();
+
+            if(!name || !phone || !manualSlot) {
+                document.getElementById('customer-details-section').scrollIntoView({ behavior: 'smooth' });
+
+                if(!name) {
+                    nameInput.focus();
+                } else if(!phone) {
+                    phoneInput.focus();
+                } else {
+                    slotInput.focus();
+                }
+
+                return; 
+            }
+
+            const total = calculateTotals();
             const upiString = `upi://pay?pa=9154095125@ybl&pn=A%20Bhaskar&am=${total}&cu=INR`;
             document.getElementById('upi-qr-graphic').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiString)}`;
             document.getElementById('modal-grand-total').innerText = total;
