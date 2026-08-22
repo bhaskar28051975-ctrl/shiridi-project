@@ -10,6 +10,28 @@
 </head>
 <body class="bg-gray-100 text-gray-900 min-h-screen p-4 font-sans">
 
+    <!-- Auth Lock Screen Modal -->
+    <div id="auth-modal" class="fixed inset-0 bg-gray-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-white border border-gray-200 p-6 rounded-2xl max-w-sm w-full shadow-2xl space-y-4 text-gray-900">
+            <div class="text-center">
+                <span class="text-3xl">🔒</span>
+                <h2 class="text-xl font-bold mt-2">Admin Panel Lock</h2>
+                <p class="text-xs text-gray-500">Enter User ID & Password to continue</p>
+            </div>
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block mb-1 font-bold">User ID</label>
+                    <input type="text" id="auth-userid" class="w-full bg-gray-50 border border-gray-300 rounded p-2.5">
+                </div>
+                <div>
+                    <label class="block mb-1 font-bold">Password</label>
+                    <input type="password" id="auth-password" class="w-full bg-gray-50 border border-gray-300 rounded p-2.5">
+                </div>
+                <button onclick="attemptLogin('admin')" class="w-full bg-red-700 hover:bg-red-800 text-white font-extrabold py-3 rounded uppercase text-xs">Verify Access</button>
+            </div>
+        </div>
+    </div>
+
     <div class="max-w-4xl mx-auto">
         <div class="bg-red-700 text-white p-5 rounded-xl shadow-md mb-6 flex justify-between items-center">
             <div class="flex items-center space-x-4">
@@ -19,86 +41,45 @@
                     <p class="text-xs text-red-100 uppercase tracking-widest font-semibold mt-0.5">Shiridi Project Control Hub</p>
                 </div>
             </div>
+            <button onclick="logout()" class="bg-red-900/50 hover:bg-red-900 text-white text-xs font-bold px-3 py-1.5 rounded-lg border border-red-500/30">Logout 🚪</button>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="space-y-6">
-                
-                <!-- Identity & Payment Branding Settings -->
+                <!-- App Identity Settings -->
                 <div class="bg-white p-5 rounded-xl shadow border border-gray-200">
                     <h2 class="text-sm font-extrabold uppercase text-gray-800 mb-3 tracking-wider border-b pb-2 flex items-center">⚙️ App Identity & Payment Settings</h2>
                     <div class="space-y-3 text-xs">
-                        <div>
-                            <label class="block mb-1 text-gray-700 font-bold">Hotel / Title Name</label>
-                            <input type="text" id="setup-hotel-name" class="w-full bg-gray-50 border border-gray-300 rounded p-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-600">
-                        </div>
-                        <div>
-                            <label class="block mb-1 text-gray-700 font-bold">Hotel Logo Image URL</label>
-                            <input type="text" id="setup-hotel-image" class="w-full bg-gray-50 border border-gray-300 rounded p-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-600" placeholder="Paste branding thumbnail square logo link">
-                        </div>
-                        <div>
-                            <label class="block mb-1 text-gray-700 font-bold">App Banner Image URL (Full Width)</label>
-                            <input type="text" id="setup-banner-image" class="w-full bg-gray-50 border border-gray-300 rounded p-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-600" placeholder="Paste full-width main view banner graphic url link">
-                        </div>
-
-                        <hr class="my-2 border-gray-200">
-                        <p class="text-[11px] font-black uppercase text-red-700 tracking-wider">💳 UPI Payment Configuration</p>
-
-                        <div>
-                            <label class="block mb-1 text-gray-700 font-bold">UPI ID (VPA)</label>
-                            <input type="text" id="setup-upi-id" class="w-full bg-gray-50 border border-gray-300 rounded p-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-600" placeholder="e.g., 9154095125@ybl">
-                        </div>
-                        <div>
-                            <label class="block mb-1 text-gray-700 font-bold">Merchant Name</label>
-                            <input type="text" id="setup-merchant-name" class="w-full bg-gray-50 border border-gray-300 rounded p-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-600" placeholder="e.g., A Bhaskar">
-                        </div>
-                        <div>
-                            <label class="block mb-1 text-gray-700 font-bold">Custom QR Code Image URL (Optional)</label>
-                            <input type="text" id="setup-qr-image" class="w-full bg-gray-50 border border-gray-300 rounded p-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-600" placeholder="Leave blank to generate dynamic UPI QR automatically">
-                            <p class="text-[10px] text-gray-500 mt-1">If provided, this image will replace the auto-generated QR code.</p>
-                        </div>
-
-                        <button onclick="saveAppIdentitySettings()" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-bold py-2.5 rounded transition uppercase tracking-wider text-[11px] mt-1 shadow-sm">
-                            Update All Settings
-                        </button>
+                        <div><label class="block mb-1 text-gray-700 font-bold">Hotel / Title Name</label><input type="text" id="setup-hotel-name" class="w-full bg-gray-50 border border-gray-300 rounded p-2"></div>
+                        <div><label class="block mb-1 text-gray-700 font-bold">Hotel Logo Image URL</label><input type="text" id="setup-hotel-image" class="w-full bg-gray-50 border border-gray-300 rounded p-2"></div>
+                        <div><label class="block mb-1 text-gray-700 font-bold">App Banner Image URL</label><input type="text" id="setup-banner-image" class="w-full bg-gray-50 border border-gray-300 rounded p-2"></div>
+                        <hr class="my-2">
+                        <p class="text-[11px] font-black uppercase text-red-700">💳 UPI Payment Configuration</p>
+                        <div><label class="block mb-1 text-gray-700 font-bold">UPI ID (VPA)</label><input type="text" id="setup-upi-id" class="w-full bg-gray-50 border border-gray-300 rounded p-2"></div>
+                        <div><label class="block mb-1 text-gray-700 font-bold">Merchant Name</label><input type="text" id="setup-merchant-name" class="w-full bg-gray-50 border border-gray-300 rounded p-2"></div>
+                        <div><label class="block mb-1 text-gray-700 font-bold">Custom QR Code Image URL</label><input type="text" id="setup-qr-image" class="w-full bg-gray-50 border border-gray-300 rounded p-2"></div>
+                        <button onclick="saveAppIdentitySettings()" class="w-full bg-gray-800 text-white font-bold py-2.5 rounded uppercase text-[11px] mt-1 shadow-sm">Update All Settings</button>
                     </div>
                 </div>
 
-                <!-- Add/Edit Food Item Form -->
+                <!-- Add/Edit Form -->
                 <div class="bg-white p-5 rounded-xl shadow border border-gray-200">
                     <h2 id="form-title" class="text-sm font-extrabold uppercase text-red-700 mb-4 tracking-wider">✨ Add New Food Item</h2>
                     <input type="hidden" id="item-id">
-                    
                     <div class="space-y-4 text-xs">
-                        <div>
-                            <label class="block mb-1 text-gray-700 font-bold">Item Name</label>
-                            <input type="text" id="menu-name" class="w-full bg-gray-50 border border-gray-300 rounded p-2.5 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-600" placeholder="e.g., Special Train Meal Tray">
-                        </div>
-                        <div>
-                            <label class="block mb-1 text-gray-700 font-bold">Price (₹)</label>
-                            <input type="text" id="menu-price" class="w-full bg-gray-50 border border-gray-300 rounded p-2.5 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-600" placeholder="e.g., 140 or 140 / Plate">
-                        </div>
-                        <div>
-                            <label class="block mb-1 text-gray-700 font-bold">Image URL</label>
-                            <input type="text" id="menu-image" class="w-full bg-gray-50 border border-gray-300 rounded p-2.5 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-600" placeholder="Paste image link here">
-                            <p class="text-[10px] text-gray-500 mt-1">Copy and paste any direct link to a food photo here.</p>
-                        </div>
-
+                        <div><label class="block mb-1 text-gray-700 font-bold">Item Name</label><input type="text" id="menu-name" class="w-full bg-gray-50 border border-gray-300 rounded p-2.5"></div>
+                        <div><label class="block mb-1 text-gray-700 font-bold">Price (₹)</label><input type="text" id="menu-price" class="w-full bg-gray-50 border border-gray-300 rounded p-2.5"></div>
+                        <div><label class="block mb-1 text-gray-700 font-bold">Image URL</label><input type="text" id="menu-image" class="w-full bg-gray-50 border border-gray-300 rounded p-2.5"></div>
                         <div class="pt-2 flex gap-2">
-                            <button id="btn-save" onclick="saveItem()" class="flex-1 bg-red-700 hover:bg-red-800 text-white font-bold py-2.5 rounded transition uppercase tracking-wider shadow-sm">
-                                Save Item
-                            </button>
-                            <button id="btn-cancel" onclick="resetForm()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2.5 rounded transition font-bold hidden">
-                                Cancel
-                            </button>
+                            <button id="btn-save" onclick="saveItem()" class="flex-1 bg-red-700 text-white font-bold py-2.5 rounded uppercase">Save Item</button>
+                            <button id="btn-cancel" onclick="resetForm()" class="bg-gray-200 text-gray-700 px-3 py-2.5 rounded font-bold hidden">Cancel</button>
                         </div>
                     </div>
                 </div>
-
             </div>
 
             <div class="md:col-span-2 bg-white p-5 rounded-xl shadow border border-gray-200">
-                <h2 class="text-sm font-extrabold uppercase text-gray-800 mb-4 border-b border-gray-200 pb-2 tracking-wider">📋 Current Live Items</h2>
+                <h2 class="text-sm font-extrabold uppercase text-gray-800 mb-4 border-b pb-2 tracking-wider">📋 Current Live Items</h2>
                 <div id="admin-menu-container" class="space-y-3 max-h-[78vh] overflow-y-auto pr-1"></div>
             </div>
         </div>
@@ -118,155 +99,114 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
+        function checkSession() {
+            const session = JSON.parse(sessionStorage.getItem('shiridi_user'));
+            if (session && session.perms && session.perms.admin) {
+                document.getElementById('auth-modal').classList.add('hidden');
+            } else {
+                document.getElementById('auth-modal').classList.remove('hidden');
+            }
+        }
+
+        function attemptLogin(page) {
+            const u = document.getElementById('auth-userid').value.trim();
+            const p = document.getElementById('auth-password').value.trim();
+            if (!u || !p) return alert("Enter User ID and Password.");
+
+            db.ref(`shiridi_settings/users/${u}`).once('value', snapshot => {
+                const userData = snapshot.val();
+                if (userData && userData.password === p) {
+                    if (userData.perms && userData.perms[page]) {
+                        sessionStorage.setItem('shiridi_user', JSON.stringify({ userId: u, perms: userData.perms }));
+                        checkSession();
+                    } else {
+                        alert("Access Denied: You don't have permission for this module.");
+                    }
+                } else {
+                    alert("Invalid User ID or Password.");
+                }
+            });
+        }
+
+        function logout() {
+            sessionStorage.removeItem('shiridi_user');
+            location.reload();
+        }
+
         db.ref('shiridi_settings').on('value', snapshot => {
             const settings = snapshot.val() || {};
-            const hotelName = settings.hotelName || "Sai Krishna Caterers";
-            const hotelImage = settings.hotelImage || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120";
-            const bannerImage = settings.bannerImage || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800";
-            const upiId = settings.upiId || "9154095125@ybl";
-            const merchantName = settings.merchantName || "A Bhaskar";
-            const customQrImage = settings.customQrImage || "";
+            document.getElementById('admin-header-title').innerText = (settings.hotelName || "Sai Krishna Caterers") + " Admin";
+            document.getElementById('admin-header-logo').src = settings.hotelImage || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120";
             
-            document.getElementById('admin-header-title').innerText = hotelName + " Admin";
-            document.getElementById('admin-header-logo').src = hotelImage;
-            
-            if(document.activeElement !== document.getElementById('setup-hotel-name')) {
-                document.getElementById('setup-hotel-name').value = hotelName;
-            }
-            if(document.activeElement !== document.getElementById('setup-hotel-image')) {
-                document.getElementById('setup-hotel-image').value = hotelImage;
-            }
-            if(document.activeElement !== document.getElementById('setup-banner-image')) {
-                document.getElementById('setup-banner-image').value = bannerImage;
-            }
-            if(document.activeElement !== document.getElementById('setup-upi-id')) {
-                document.getElementById('setup-upi-id').value = upiId;
-            }
-            if(document.activeElement !== document.getElementById('setup-merchant-name')) {
-                document.getElementById('setup-merchant-name').value = merchantName;
-            }
-            if(document.activeElement !== document.getElementById('setup-qr-image')) {
-                document.getElementById('setup-qr-image').value = customQrImage;
-            }
+            if(document.activeElement !== document.getElementById('setup-hotel-name')) document.getElementById('setup-hotel-name').value = settings.hotelName || "";
+            if(document.activeElement !== document.getElementById('setup-hotel-image')) document.getElementById('setup-hotel-image').value = settings.hotelImage || "";
+            if(document.activeElement !== document.getElementById('setup-banner-image')) document.getElementById('setup-banner-image').value = settings.bannerImage || "";
+            if(document.activeElement !== document.getElementById('setup-upi-id')) document.getElementById('setup-upi-id').value = settings.upiId || "";
+            if(document.activeElement !== document.getElementById('setup-merchant-name')) document.getElementById('setup-merchant-name').value = settings.merchantName || "";
+            if(document.activeElement !== document.getElementById('setup-qr-image')) document.getElementById('setup-qr-image').value = settings.customQrImage || "";
         });
 
         function saveAppIdentitySettings() {
-            const hName = document.getElementById('setup-hotel-name').value.trim();
-            const hImg = document.getElementById('setup-hotel-image').value.trim();
-            const bImg = document.getElementById('setup-banner-image').value.trim();
-            const uId = document.getElementById('setup-upi-id').value.trim();
-            const mName = document.getElementById('setup-merchant-name').value.trim();
-            const qImg = document.getElementById('setup-qr-image').value.trim();
-            
-            if(!hName) {
-                alert("Hotel Name field cannot be empty.");
-                return;
-            }
-            
             db.ref('shiridi_settings').update({
-                hotelName: hName,
-                hotelImage: hImg || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120",
-                bannerImage: bImg || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800",
-                upiId: uId || "9154095125@ybl",
-                merchantName: mName || "A Bhaskar",
-                customQrImage: qImg
-            }).then(() => alert("All settings and QR configuration synced successfully!"))
-              .catch(err => alert("Error syncing layout properties: " + err.message));
+                hotelName: document.getElementById('setup-hotel-name').value.trim(),
+                hotelImage: document.getElementById('setup-hotel-image').value.trim(),
+                bannerImage: document.getElementById('setup-banner-image').value.trim(),
+                upiId: document.getElementById('setup-upi-id').value.trim(),
+                merchantName: document.getElementById('setup-merchant-name').value.trim(),
+                customQrImage: document.getElementById('setup-qr-image').value.trim()
+            }).then(() => alert("Settings updated!"));
         }
 
         db.ref('shiridi_menu').on('value', snapshot => {
             const data = snapshot.val();
             const container = document.getElementById('admin-menu-container');
             container.innerHTML = '';
-
-            if(!data) {
-                container.innerHTML = `<p class="text-sm text-gray-400 text-center py-6">No items found. Add your first item using the left panel!</p>`;
-                return;
-            }
-
+            if(!data) return;
             Object.keys(data).forEach(key => {
                 const item = data[key];
                 const row = document.createElement('div');
-                row.className = "flex items-center justify-between bg-gray-50 border border-gray-200 p-3 rounded-xl shadow-sm";
-                
+                row.className = "flex items-center justify-between bg-gray-50 border border-gray-200 p-3 rounded-xl";
                 row.innerHTML = `
                     <div class="flex items-center space-x-3">
-                        <div class="w-12 h-12 overflow-hidden rounded-lg border border-gray-200 bg-white flex items-center justify-center shrink-0">
-                            <img src="${item.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120'}" class="w-full h-full object-cover" alt="">
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-sm leading-tight text-gray-900">${item.name}</h4>
-                            <p class="text-red-700 text-xs font-bold mt-0.5">₹${item.price}</p>
-                        </div>
+                        <img src="${item.image}" class="w-12 h-12 object-cover rounded-lg">
+                        <div><h4 class="font-bold text-sm text-gray-900">${item.name}</h4><p class="text-red-700 text-xs font-bold">₹${item.price}</p></div>
                     </div>
-                    <div class="flex items-center space-x-2 text-xs">
-                        <button onclick="editItemForm('${key}', \`${item.name}\`, \`${item.price}\`, \`${item.image}\`)" class="bg-white hover:bg-gray-100 border border-gray-300 text-gray-700 px-3 py-1.5 rounded font-bold shadow-sm transition">
-                            ✏️ Edit
-                        </button>
-                        <button onclick="deleteItem('${key}')" class="bg-red-50 hover:bg-red-100 text-red-700 px-3 py-1.5 rounded font-bold transition border border-red-200">
-                            🗑️ Delete
-                        </button>
-                    </div>
-                `;
+                    <div class="flex space-x-2 text-xs">
+                        <button onclick="editItemForm('${key}', '${item.name}', '${item.price}', '${item.image}')" class="bg-white border px-3 py-1.5 rounded font-bold">Edit</button>
+                        <button onclick="deleteItem('${key}')" class="bg-red-50 text-red-700 px-3 py-1.5 rounded font-bold">Delete</button>
+                    </div>`;
                 container.appendChild(row);
             });
         });
 
         function saveItem() {
             const id = document.getElementById('item-id').value;
-            const name = document.getElementById('menu-name').value.trim();
-            const price = document.getElementById('menu-price').value.trim();
-            const image = document.getElementById('menu-image').value.trim();
-
-            if(!name || !price) {
-                alert("Please enter both the item name and price.");
-                return;
-            }
-
             const itemData = {
-                name: name,
-                price: price, 
-                image: image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120"
+                name: document.getElementById('menu-name').value.trim(),
+                price: document.getElementById('menu-price').value.trim(),
+                image: document.getElementById('menu-image').value.trim()
             };
-
-            if(id) {
-                db.ref(`shiridi_menu/${id}`).update(itemData)
-                    .then(() => { alert("Item updated successfully!"); resetForm(); })
-                    .catch(err => alert("Error: " + err.message));
-            } else {
-                db.ref('shiridi_menu').push(itemData)
-                    .then(() => { alert("New item added to live menu!"); resetForm(); })
-                    .catch(err => alert("Error: " + err.message));
-            }
+            if(id) db.ref(`shiridi_menu/${id}`).update(itemData).then(resetForm);
+            else db.ref('shiridi_menu').push(itemData).then(resetForm);
         }
 
-        function deleteItem(key) {
-            if(confirm("Are you sure you want to completely remove this food item from the menu?")) {
-                db.ref(`shiridi_menu/${key}`).remove()
-                    .then(() => alert("Item deleted successfully."))
-                    .catch(err => alert("Error: " + err.message));
-            }
-        }
-
-        function editItemForm(key, name, price, image) {
-            document.getElementById('item-id').value = key;
-            document.getElementById('menu-name').value = name;
-            document.getElementById('menu-price').value = price;
-            document.getElementById('menu-image').value = (image === "undefined" || image.includes("unsplash.com/photo-1546069901-ba9599a7e63c")) ? "" : image;
-            
-            document.getElementById('form-title').innerText = "✏️ Edit Food Item";
+        function deleteItem(key) { if(confirm("Remove item?")) db.ref(`shiridi_menu/${key}`).remove(); }
+        function editItemForm(k, n, p, i) {
+            document.getElementById('item-id').value = k;
+            document.getElementById('menu-name').value = n;
+            document.getElementById('menu-price').value = p;
+            document.getElementById('menu-image').value = i;
             document.getElementById('btn-cancel').classList.remove('hidden');
         }
-
         function resetForm() {
             document.getElementById('item-id').value = '';
             document.getElementById('menu-name').value = '';
             document.getElementById('menu-price').value = '';
             document.getElementById('menu-image').value = '';
-            
-            document.getElementById('form-title').innerText = "✨ Add New Food Item";
             document.getElementById('btn-cancel').classList.add('hidden');
         }
+
+        window.onload = checkSession;
     </script>
 </body>
 </html>
