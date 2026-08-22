@@ -52,7 +52,7 @@
             <p class="col-span-2 text-center text-sm text-gray-400 py-8">Loading fresh dishes from database...</p>
         </div>
 
-        <!-- Customer Form Section (Added ID for smooth scrolling) -->
+        <!-- Customer Form Section -->
         <div id="customer-details-section" class="mt-8 bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-4 scroll-mt-20">
             <h3 class="text-xs font-black uppercase text-red-700 tracking-wider border-b pb-2">Delivery & Customer Details</h3>
             
@@ -130,8 +130,8 @@
                 </div>
                 
                 <div class="bg-gray-50 p-2 rounded-xl border border-gray-100">
-                    <p class="text-[11px] font-bold text-gray-500 uppercase tracking-wide">Merchant: <span class="text-gray-800 font-extrabold">A Bhaskar</span></p>
-                    <p class="text-[11px] font-bold text-gray-500 uppercase tracking-wide mt-0.5">UPI ID: <span class="text-red-700 font-black">9154095125@ybl</span></p>
+                    <p class="text-[11px] font-bold text-gray-500 uppercase tracking-wide">Merchant: <span id="display-merchant-name" class="text-gray-800 font-extrabold">A Bhaskar</span></p>
+                    <p class="text-[11px] font-bold text-gray-500 uppercase tracking-wide mt-0.5">UPI ID: <span id="display-upi-id" class="text-red-700 font-black">9154095125@ybl</span></p>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3 pt-1">
@@ -163,6 +163,11 @@
 
         let globalProducts = [];
         let cartState = {};
+        
+        // Settings State
+        let currentUpiId = "9154095125@ybl";
+        let currentMerchantName = "A Bhaskar";
+        let currentCustomQrImage = "";
 
         db.ref('shiridi_settings').on('value', snapshot => {
             const settings = snapshot.val() || {};
@@ -170,6 +175,13 @@
             const hotelImage = settings.hotelImage || "";
             const bannerImage = settings.bannerImage || "";
             const subTitle = settings.subTitle || "";
+            
+            currentUpiId = settings.upiId || "9154095125@ybl";
+            currentMerchantName = settings.merchantName || "A Bhaskar";
+            currentCustomQrImage = settings.customQrImage || "";
+
+            document.getElementById('display-merchant-name').innerText = currentMerchantName;
+            document.getElementById('display-upi-id').innerText = currentUpiId;
             
             document.getElementById('app-header-title').innerText = hotelName;
             document.getElementById('app-browser-title').innerText = hotelName ? hotelName + " - Menu" : "Menu";
@@ -338,8 +350,16 @@
             }
 
             const total = calculateTotals();
-            const upiString = `upi://pay?pa=9154095125@ybl&pn=A%20Bhaskar&am=${total}&cu=INR`;
-            document.getElementById('upi-qr-graphic').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiString)}`;
+            
+            // Check if Custom QR Image is provided in Admin, else generate dynamic QR
+            if (currentCustomQrImage && currentCustomQrImage.trim() !== "") {
+                document.getElementById('upi-qr-graphic').src = currentCustomQrImage;
+            } else {
+                const encodedMerchant = encodeURIComponent(currentMerchantName);
+                const upiString = `upi://pay?pa=${currentUpiId}&pn=${encodedMerchant}&am=${total}&cu=INR`;
+                document.getElementById('upi-qr-graphic').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiString)}`;
+            }
+
             document.getElementById('modal-grand-total').innerText = total;
             document.getElementById('payment-modal').classList.remove('hidden');
         }
