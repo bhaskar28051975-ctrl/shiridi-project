@@ -8,88 +8,82 @@
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
 </head>
-<body class="bg-gray-50 text-gray-900 min-h-screen p-4 font-sans print:bg-white print:p-0">
+<body class="bg-gray-50 text-gray-900 min-h-screen p-4 font-sans">
+
+    <!-- Auth Lock Screen Modal -->
+    <div id="auth-modal" class="fixed inset-0 bg-gray-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-white border border-gray-200 p-6 rounded-2xl max-w-sm w-full shadow-2xl space-y-4 text-gray-900">
+            <div class="text-center">
+                <span class="text-3xl">🔒</span>
+                <h2 class="text-xl font-bold mt-2">Reports Access Lock</h2>
+                <p class="text-xs text-gray-500">Enter User ID & Password to view analytics</p>
+            </div>
+            <div class="space-y-3 text-xs">
+                <div><label class="block mb-1 font-bold">User ID</label><input type="text" id="auth-userid" class="w-full bg-gray-50 border border-gray-300 rounded p-2.5"></div>
+                <div><label class="block mb-1 font-bold">Password</label><input type="password" id="auth-password" class="w-full bg-gray-50 border border-gray-300 rounded p-2.5"></div>
+                <button onclick="attemptLogin('report')" class="w-full bg-red-700 hover:bg-red-800 text-white font-extrabold py-3 rounded uppercase text-xs">Verify Access</button>
+            </div>
+        </div>
+    </div>
 
     <div class="max-w-5xl mx-auto">
-        <!-- Header Banner -->
-        <div class="bg-red-700 text-white p-5 rounded-xl shadow-md mb-6 flex flex-col sm:flex-row justify-between items-center gap-4 print:border print:border-gray-300 print:text-black print:bg-white print:shadow-none">
+        <div class="bg-red-700 text-white p-5 rounded-xl shadow-md mb-6 flex justify-between items-center">
             <div>
-                <h1 class="text-2xl font-extrabold tracking-tight">Sai Krishna Caterers</h1>
-                <p class="text-xs text-red-100 uppercase tracking-widest font-semibold mt-0.5 print:text-gray-600">Sales & Revenue Reports Dashboard</p>
+                <h1 class="text-2xl font-extrabold">Sai Krishna Caterers</h1>
+                <p class="text-xs text-red-100 uppercase tracking-widest font-semibold mt-0.5">Sales & Revenue Reports Dashboard</p>
             </div>
-            <div class="flex gap-2 print:hidden">
-                <button onclick="resetAllReports()" class="bg-red-900/50 hover:bg-red-900 text-red-100 font-bold text-xs px-4 py-2 rounded-lg transition border border-red-500/30 uppercase tracking-wider">
-                    🔄 Reset Dashboard (0)
-                </button>
-                <button onclick="window.print()" class="bg-white text-red-700 hover:bg-gray-100 font-bold text-xs px-4 py-2 rounded-lg transition shadow-sm uppercase tracking-wider">
-                    🖨️ Print Records
-                </button>
+            <div class="flex gap-2">
+                <button onclick="resetAllReports()" class="bg-red-900/50 hover:bg-red-900 text-red-100 font-bold text-xs px-3 py-2 rounded uppercase">🔄 Reset (0)</button>
+                <button onclick="window.print()" class="bg-white text-red-700 font-bold text-xs px-3 py-2 rounded uppercase">🖨️ Print</button>
+                <button onclick="logout()" class="bg-red-900/50 hover:bg-red-900 text-white text-xs font-bold px-3 py-2 rounded uppercase">Logout 🚪</button>
             </div>
         </div>
 
-        <!-- Filter Control Station Block -->
-        <div class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm mb-6 flex flex-col sm:flex-row justify-between items-center gap-4 print:hidden">
-            <!-- Filter Window Tabs -->
-            <div class="flex bg-gray-100 p-1 rounded-xl w-full sm:w-auto">
-                <button onclick="setReportRange('daily')" id="tab-daily" class="flex-1 sm:flex-none text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-lg transition-all text-gray-500 hover:text-gray-900">Daily</button>
-                <button onclick="setReportRange('weekly')" id="tab-weekly" class="flex-1 sm:flex-none text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-lg transition-all text-gray-500 hover:text-gray-900">Weekly</button>
-                <button onclick="setReportRange('monthly')" id="tab-monthly" class="flex-1 sm:flex-none text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-lg transition-all text-gray-500 hover:text-gray-900">Monthly</button>
-                <button onclick="setReportRange('all')" id="tab-all" class="flex-1 sm:flex-none text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-lg transition-all bg-white text-red-700 shadow-sm">All Time</button>
+        <div class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex bg-gray-100 p-1 rounded-xl">
+                <button onclick="setReportRange('daily')" id="tab-daily" class="text-xs font-bold uppercase px-4 py-2 rounded-lg text-gray-500">Daily</button>
+                <button onclick="setReportRange('weekly')" id="tab-weekly" class="text-xs font-bold uppercase px-4 py-2 rounded-lg text-gray-500">Weekly</button>
+                <button onclick="setReportRange('monthly')" id="tab-monthly" class="text-xs font-bold uppercase px-4 py-2 rounded-lg text-gray-500">Monthly</button>
+                <button onclick="setReportRange('all')" id="tab-all" class="text-xs font-bold uppercase px-4 py-2 rounded-lg bg-white text-red-700 shadow-sm">All Time</button>
             </div>
-
-            <!-- Main Interactive Calendar Reference Field Input -->
-            <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
-                <label class="text-xs font-bold uppercase tracking-wider text-gray-500 whitespace-nowrap">Target Date:</label>
-                <input type="date" id="report-date-picker" onchange="handleDateSelection()" class="border border-gray-300 p-2 rounded-xl text-xs font-bold uppercase text-gray-700 focus:outline-none focus:border-red-700 bg-gray-50">
+            <div class="flex items-center gap-2">
+                <label class="text-xs font-bold uppercase text-gray-500">Target Date:</label>
+                <input type="date" id="report-date-picker" onchange="handleDateSelection()" class="border border-gray-300 p-2 rounded-xl text-xs font-bold text-gray-700">
             </div>
         </div>
 
-        <!-- Metrics Overview Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
             <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                <span class="block text-xs font-bold text-gray-500 uppercase tracking-wider" id="revenue-label">Total Revenue</span>
+                <span class="block text-xs font-bold text-gray-500 uppercase" id="revenue-label">Total Revenue</span>
                 <span class="text-2xl font-black text-red-700 mt-1 block">₹<span id="report-revenue">0</span></span>
             </div>
             <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                <span class="block text-xs font-bold text-gray-500 uppercase tracking-wider" id="dispatched-label">Dispatched Orders</span>
+                <span class="block text-xs font-bold text-gray-500 uppercase" id="dispatched-label">Dispatched Orders</span>
                 <span id="report-completed-count" class="text-2xl font-black text-gray-800 mt-1 block">0</span>
             </div>
             <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                <span class="block text-xs font-bold text-gray-500 uppercase tracking-wider" id="active-label">Active In Kitchen</span>
+                <span class="block text-xs font-bold text-gray-500 uppercase" id="active-label">Active In Kitchen</span>
                 <span id="report-active-count" class="text-2xl font-black text-amber-600 mt-1 block">0</span>
             </div>
         </div>
 
-        <!-- Item Breakdown Summary Card -->
         <div class="bg-white rounded-xl border border-gray-200 shadow-sm mb-6 p-5">
-            <h3 class="text-xs font-black uppercase text-red-700 tracking-wider border-b pb-3 mb-4">📦 Top Food Items Sold Breakdown (In Selected Window)</h3>
-            <div id="item-breakdown-container" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <p class="col-span-4 text-center text-xs text-gray-400 py-2">No item metrics compiled for this selection window frame.</p>
-            </div>
+            <h3 class="text-xs font-black uppercase text-red-700 border-b pb-3 mb-4">📦 Top Food Items Sold Breakdown</h3>
+            <div id="item-breakdown-container" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
         </div>
 
-        <!-- Detailed Orders Log Table -->
         <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <div class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
-                <h2 class="text-sm font-extrabold uppercase text-gray-800 tracking-wider">📋 Order Log Records (<span id="window-title-display">All Time</span>)</h2>
+            <div class="p-4 border-b border-gray-200 bg-gray-50">
+                <h2 class="text-sm font-extrabold uppercase text-gray-800">📋 Order Log Records (<span id="window-title-display">All Time</span>)</h2>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse text-sm">
                     <thead>
-                        <tr class="bg-gray-100 border-b border-gray-200 text-xs font-bold text-gray-600 uppercase tracking-wider">
-                            <th class="p-4">Date/Time</th>
-                            <th class="p-4">Customer Details</th>
-                            <th class="p-4">Time Slot</th>
-                            <th class="p-4">Items Ordered</th>
-                            <th class="p-4 text-right">Amount</th>
-                            <th class="p-4 text-center">Status</th>
+                        <tr class="bg-gray-100 border-b text-xs font-bold text-gray-600 uppercase">
+                            <th class="p-4">Date/Time</th><th class="p-4">Customer Details</th><th class="p-4">Time Slot</th><th class="p-4">Items Ordered</th><th class="p-4 text-right">Amount</th><th class="p-4 text-center">Status</th>
                         </tr>
                     </thead>
-                    <tbody id="report-table-body" class="divide-y divide-gray-200 text-gray-700">
-                        <tr>
-                            <td colspan="6" class="p-8 text-center text-gray-400">Loading database summaries...</td>
-                        </tr>
-                    </tbody>
+                    <tbody id="report-table-body" class="divide-y divide-gray-200 text-gray-700"></tbody>
                 </table>
             </div>
         </div>
@@ -108,228 +102,91 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-
         let masterOrdersList = {};
         let currentRangeMode = "all";
-        
-        const today = new Date();
-        document.getElementById('report-date-picker').value = today.toISOString().split('T')[0];
 
+        function checkSession() {
+            const session = JSON.parse(sessionStorage.getItem('shiridi_user'));
+            if (session && session.perms && session.perms.report) {
+                document.getElementById('auth-modal').classList.add('hidden');
+            } else {
+                document.getElementById('auth-modal').classList.remove('hidden');
+            }
+        }
+
+        function attemptLogin(page) {
+            const u = document.getElementById('auth-userid').value.trim();
+            const p = document.getElementById('auth-password').value.trim();
+            if (!u || !p) return alert("Enter User ID and Password.");
+
+            db.ref(`shiridi_settings/users/${u}`).once('value', snapshot => {
+                const userData = snapshot.val();
+                if (userData && userData.password === p) {
+                    if (userData.perms && userData.perms[page]) {
+                        sessionStorage.setItem('shiridi_user', JSON.stringify({ userId: u, perms: userData.perms }));
+                        checkSession();
+                    } else { alert("Access Denied for Report screen."); }
+                } else { alert("Invalid User ID or Password."); }
+            });
+        }
+
+        function logout() {
+            sessionStorage.removeItem('shiridi_user');
+            location.reload();
+        }
+
+        document.getElementById('report-date-picker').value = new Date().toISOString().split('T')[0];
         db.ref('shiridi_orders').on('value', snapshot => {
             masterOrdersList = snapshot.val() || {};
             compileAndFilterDashboard();
         });
 
-        function handleDateSelection() {
-            if(currentRangeMode === "all") {
-                currentRangeMode = "daily";
-            }
-            compileAndFilterDashboard();
-        }
-
+        function handleDateSelection() { if(currentRangeMode === "all") currentRangeMode = "daily"; compileAndFilterDashboard(); }
         function setReportRange(mode) {
             currentRangeMode = mode;
-            
             ['daily', 'weekly', 'monthly', 'all'].forEach(m => {
-                const tab = document.getElementById(`tab-${m}`);
-                if(m === mode) {
-                    tab.className = "flex-1 sm:flex-none text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-lg transition-all bg-white text-red-700 shadow-sm";
-                } else {
-                    tab.className = "flex-1 sm:flex-none text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-lg transition-all text-gray-500 hover:text-gray-900";
-                }
+                document.getElementById(`tab-${m}`).className = m === mode ? "text-xs font-bold uppercase px-4 py-2 rounded-lg bg-white text-red-700 shadow-sm" : "text-xs font-bold uppercase px-4 py-2 rounded-lg text-gray-500";
             });
-
             compileAndFilterDashboard();
         }
 
         function compileAndFilterDashboard() {
             const tableBody = document.getElementById('report-table-body');
             tableBody.innerHTML = '';
-
             const selectedDateValue = document.getElementById('report-date-picker').value;
             if(!selectedDateValue) return;
-
-            const targetDate = new Date(selectedDateValue);
-            targetDate.setHours(0,0,0,0);
-
-            let totalRevenue = 0;
-            let completedCount = 0;
-            let activeCount = 0;
-            let itemQuantitiesBreakdown = {};
-
-            const orderKeys = Object.keys(masterOrdersList).reverse();
-            let entriesRendered = 0;
-
-            orderKeys.forEach(key => {
+            const targetDate = new Date(selectedDateValue); targetDate.setHours(0,0,0,0);
+            
+            let totalRevenue = 0, completedCount = 0, activeCount = 0, itemQuantitiesBreakdown = {};
+            Object.keys(masterOrdersList).reverse().forEach(key => {
                 const order = masterOrdersList[key];
-                
-                // Security check: Ignore corrupt database rows or non-order logs
-                if(!order || !order.customerName || !order.itemsSummary) return;
-
-                let orderDate = parseOrderDate(order.dateStr);
-                if(!orderDate) return; 
-
-                let isMatch = false;
-
-                if (currentRangeMode === "all") {
-                    isMatch = true;
-                } else if (currentRangeMode === "daily") {
-                    isMatch = (orderDate.getTime() === targetDate.getTime());
-                } else if (currentRangeMode === "weekly") {
-                    const oneWeekAgo = new Date(targetDate);
-                    oneWeekAgo.setDate(targetDate.getDate() - 7);
-                    isMatch = (orderDate >= oneWeekAgo && orderDate <= targetDate);
-                } else if (currentRangeMode === "monthly") {
-                    isMatch = (orderDate.getMonth() === targetDate.getMonth() && orderDate.getFullYear() === targetDate.getFullYear());
-                }
-
-                if (!isMatch) return;
-
-                entriesRendered++;
+                if(!order || !order.customerName) return;
                 const amount = Number(order.grandTotal || 0);
-
-                if(order.status === "Completed") {
-                    completedCount++;
-                    totalRevenue += amount;
-                } else if(order.status === "Received") {
-                    activeCount++;
-                }
-
-                parseAndAggregateItems(order.itemsSummary, itemQuantitiesBreakdown);
+                if(order.status === "Completed") { completedCount++; totalRevenue += amount; }
+                else if(order.status === "Received") activeCount++;
 
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-gray-50 transition border-b border-gray-100";
-                
-                let statusBadge = order.status === 'Completed' 
-                    ? `<span class="bg-green-50 text-green-700 border border-green-200 text-[11px] font-bold px-2 py-0.5 rounded-full uppercase">Dispatched</span>`
-                    : `<span class="bg-amber-50 text-amber-700 border border-amber-200 text-[11px] font-bold px-2 py-0.5 rounded-full uppercase">Pending</span>`;
-
+                tr.className = "border-b text-xs";
                 tr.innerHTML = `
-                    <td class="p-4 whitespace-nowrap text-xs">
-                        <span class="block font-bold text-gray-900">${order.dateStr || ''}</span>
-                        <span class="text-gray-400 block text-[10px] mt-0.5">${order.timeStr || ''}</span>
-                    </td>
-                    <td class="p-4">
-                        <span class="block font-bold text-gray-900">${order.customerName}</span>
-                        <span class="text-gray-500 text-xs block mt-0.5">📞 ${order.customerPhone}</span>
-                    </td>
-                    <td class="p-4 font-semibold text-xs text-red-700 whitespace-nowrap">
-                        ${order.deliveryTimeSlot || 'Not Selected'}
-                    </td>
-                    <td class="p-4 text-xs font-bold max-w-xs text-gray-800 bg-gray-50/50 rounded-lg">
-                        ${order.itemsSummary || '—'}
-                    </td>
-                    <td class="p-4 text-right font-black text-gray-900 whitespace-nowrap">
-                        ₹${amount}
-                    </td>
-                    <td class="p-4 text-center whitespace-nowrap">
-                        ${statusBadge}
-                    </td>
-                `;
+                    <td class="p-4 font-bold">${order.dateStr || ''}<br><span class="text-gray-400 font-normal">${order.timeStr || ''}</span></td>
+                    <td class="p-4"><b>${order.customerName}</b><br>📞 ${order.customerPhone}</td>
+                    <td class="p-4 text-red-700 font-bold">${order.deliveryTimeSlot || 'Not Picked'}</td>
+                    <td class="p-4 font-bold text-gray-800">${order.itemsSummary || '—'}</td>
+                    <td class="p-4 text-right font-black">₹${amount}</td>
+                    <td class="p-4 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${order.status === 'Completed' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}">${order.status}</span></td>`;
                 tableBody.appendChild(tr);
             });
 
-            if(entriesRendered === 0) {
-                tableBody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-400 font-medium">No order history available inside this selected filters window scope.</td></tr>`;
-            }
-
-            // Clean context text tracking updates based on chosen filter values
-            let windowLabel = "All Time";
-            if (currentRangeMode === "daily") windowLabel = "Today (" + selectedDateValue + ")";
-            if (currentRangeMode === "weekly") windowLabel = "Weekly Window";
-            if (currentRangeMode === "monthly") {
-                const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-                windowLabel = monthNames[targetDate.getMonth()] + " " + targetDate.getFullYear();
-            }
-
-            document.getElementById('window-title-display').innerText = windowLabel;
-            document.getElementById('revenue-label').innerText = "Revenue (" + currentRangeMode.toUpperCase() + ")";
-            document.getElementById('dispatched-label').innerText = "Dispatched (" + currentRangeMode.toUpperCase() + ")";
-            document.getElementById('active-label').innerText = "Active (" + currentRangeMode.toUpperCase() + ")";
-            
-            updateSummaryMetrics(totalRevenue, completedCount, activeCount);
-            renderItemBreakdownUI(itemQuantitiesBreakdown);
+            document.getElementById('report-revenue').innerText = totalRevenue.toLocaleString('en-IN');
+            document.getElementById('report-completed-count').innerText = completedCount;
+            document.getElementById('report-active-count').innerText = activeCount;
         }
 
-        function parseOrderDate(dateStr) {
-            if(!dateStr) return null;
-            try {
-                const parts = dateStr.split('/');
-                if(parts.length === 3) {
-                    const parsedDate = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
-                    parsedDate.setHours(0,0,0,0);
-                    return parsedDate;
-                }
-                const fallback = new Date(dateStr);
-                fallback.setHours(0,0,0,0);
-                return isNaN(fallback.getTime()) ? null : fallback;
-            } catch(e) {
-                return null;
-            }
-        }
-
-        function parseAndAggregateItems(summaryStr, breakdownObj) {
-            if (!summaryStr || typeof summaryStr !== 'string') return;
-            const parts = summaryStr.split(',');
-            parts.forEach(part => {
-                let match = part.match(/(.+)\((\d+)x\)/);
-                if (match) {
-                    let itemName = match[1].trim();
-                    let qty = parseInt(match[2]);
-                    // Only process true clean item strings
-                    if(itemName && itemName !== 'undefined' && itemName !== 'null') {
-                        breakdownObj[itemName] = (breakdownObj[itemName] || 0) + qty;
-                    }
-                } else {
-                    let cleanName = part.trim();
-                    if(cleanName && cleanName !== 'undefined' && cleanName !== 'null') {
-                        breakdownObj[cleanName] = (breakdownObj[cleanName] || 0) + 1;
-                    }
-                }
-            });
-        }
-
-        function renderItemBreakdownUI(breakdownObj) {
-            const container = document.getElementById('item-breakdown-container');
-            container.innerHTML = '';
-            
-            const keys = Object.keys(breakdownObj);
-            if(keys.length === 0) {
-                container.innerHTML = `<p class="col-span-4 text-center text-xs text-gray-400 py-2">No item metrics compiled for this window frame selection context.</p>`;
-                return;
-            }
-
-            keys.forEach(itemName => {
-                const count = breakdownObj[itemName];
-                const block = document.createElement('div');
-                block.className = "bg-gray-50 border border-gray-100 p-3 rounded-xl flex justify-between items-center";
-                block.innerHTML = `
-                    <span class="text-xs font-bold text-gray-700 truncate pr-1" title="${itemName}">${itemName}</span>
-                    <span class="bg-red-100 text-red-700 text-xs font-black px-2.5 py-1 rounded-lg">${count} Sold</span>
-                `;
-                container.appendChild(block);
-            });
-        }
-
-        function updateSummaryMetrics(revenue, completed, active) {
-            document.getElementById('report-revenue').innerText = revenue.toLocaleString('en-IN');
-            document.getElementById('report-completed-count').innerText = completed;
-            document.getElementById('report-active-count').innerText = active;
-        }
-
-        // Administrative reset script to completely clear nodes back down to zero safely
         function resetAllReports() {
-            const confirmation = confirm("⚠️ Are you absolutely sure you want to clear your database order history? This will permanently drop all metrics back to zero.");
-            if(confirmation) {
-                db.ref('shiridi_orders').set(null)
-                    .then(() => {
-                        alert("🧼 Log database cleared successfully! All metrics reset to 0.");
-                    })
-                    .catch(err => {
-                        alert("Error resetting database: " + err.message);
-                    });
-            }
+            if(confirm("Permanently reset order history?")) db.ref('shiridi_orders').set(null);
         }
+
+        window.onload = checkSession;
     </script>
 </body>
 </html>
