@@ -24,8 +24,9 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="space-y-6">
                 
+                <!-- Identity & Payment Branding Settings -->
                 <div class="bg-white p-5 rounded-xl shadow border border-gray-200">
-                    <h2 class="text-sm font-extrabold uppercase text-gray-800 mb-3 tracking-wider border-b pb-2 flex items-center">⚙️ App Identity Branding</h2>
+                    <h2 class="text-sm font-extrabold uppercase text-gray-800 mb-3 tracking-wider border-b pb-2 flex items-center">⚙️ App Identity & Payment Settings</h2>
                     <div class="space-y-3 text-xs">
                         <div>
                             <label class="block mb-1 text-gray-700 font-bold">Hotel / Title Name</label>
@@ -39,12 +40,31 @@
                             <label class="block mb-1 text-gray-700 font-bold">App Banner Image URL (Full Width)</label>
                             <input type="text" id="setup-banner-image" class="w-full bg-gray-50 border border-gray-300 rounded p-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-600" placeholder="Paste full-width main view banner graphic url link">
                         </div>
+
+                        <hr class="my-2 border-gray-200">
+                        <p class="text-[11px] font-black uppercase text-red-700 tracking-wider">💳 UPI Payment Configuration</p>
+
+                        <div>
+                            <label class="block mb-1 text-gray-700 font-bold">UPI ID (VPA)</label>
+                            <input type="text" id="setup-upi-id" class="w-full bg-gray-50 border border-gray-300 rounded p-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-600" placeholder="e.g., 9154095125@ybl">
+                        </div>
+                        <div>
+                            <label class="block mb-1 text-gray-700 font-bold">Merchant Name</label>
+                            <input type="text" id="setup-merchant-name" class="w-full bg-gray-50 border border-gray-300 rounded p-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-600" placeholder="e.g., A Bhaskar">
+                        </div>
+                        <div>
+                            <label class="block mb-1 text-gray-700 font-bold">Custom QR Code Image URL (Optional)</label>
+                            <input type="text" id="setup-qr-image" class="w-full bg-gray-50 border border-gray-300 rounded p-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-600" placeholder="Leave blank to generate dynamic UPI QR automatically">
+                            <p class="text-[10px] text-gray-500 mt-1">If provided, this image will replace the auto-generated QR code.</p>
+                        </div>
+
                         <button onclick="saveAppIdentitySettings()" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-bold py-2.5 rounded transition uppercase tracking-wider text-[11px] mt-1 shadow-sm">
-                            Update Identity Settings
+                            Update All Settings
                         </button>
                     </div>
                 </div>
 
+                <!-- Add/Edit Food Item Form -->
                 <div class="bg-white p-5 rounded-xl shadow border border-gray-200">
                     <h2 id="form-title" class="text-sm font-extrabold uppercase text-red-700 mb-4 tracking-wider">✨ Add New Food Item</h2>
                     <input type="hidden" id="item-id">
@@ -56,7 +76,6 @@
                         </div>
                         <div>
                             <label class="block mb-1 text-gray-700 font-bold">Price (₹)</label>
-                            <!-- EDITED: Changed type to "text" to allow letters, numbers, and symbols -->
                             <input type="text" id="menu-price" class="w-full bg-gray-50 border border-gray-300 rounded p-2.5 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-600" placeholder="e.g., 140 or 140 / Plate">
                         </div>
                         <div>
@@ -104,6 +123,9 @@
             const hotelName = settings.hotelName || "Sai Krishna Caterers";
             const hotelImage = settings.hotelImage || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120";
             const bannerImage = settings.bannerImage || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800";
+            const upiId = settings.upiId || "9154095125@ybl";
+            const merchantName = settings.merchantName || "A Bhaskar";
+            const customQrImage = settings.customQrImage || "";
             
             document.getElementById('admin-header-title').innerText = hotelName + " Admin";
             document.getElementById('admin-header-logo').src = hotelImage;
@@ -117,23 +139,38 @@
             if(document.activeElement !== document.getElementById('setup-banner-image')) {
                 document.getElementById('setup-banner-image').value = bannerImage;
             }
+            if(document.activeElement !== document.getElementById('setup-upi-id')) {
+                document.getElementById('setup-upi-id').value = upiId;
+            }
+            if(document.activeElement !== document.getElementById('setup-merchant-name')) {
+                document.getElementById('setup-merchant-name').value = merchantName;
+            }
+            if(document.activeElement !== document.getElementById('setup-qr-image')) {
+                document.getElementById('setup-qr-image').value = customQrImage;
+            }
         });
 
         function saveAppIdentitySettings() {
             const hName = document.getElementById('setup-hotel-name').value.trim();
             const hImg = document.getElementById('setup-hotel-image').value.trim();
             const bImg = document.getElementById('setup-banner-image').value.trim();
+            const uId = document.getElementById('setup-upi-id').value.trim();
+            const mName = document.getElementById('setup-merchant-name').value.trim();
+            const qImg = document.getElementById('setup-qr-image').value.trim();
             
             if(!hName) {
                 alert("Hotel Name field cannot be empty.");
                 return;
             }
             
-            db.ref('shiridi_settings').set({
+            db.ref('shiridi_settings').update({
                 hotelName: hName,
                 hotelImage: hImg || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=120",
-                bannerImage: bImg || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800"
-            }).then(() => alert("Identity and Banner configuration synced across application layers successfully!"))
+                bannerImage: bImg || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800",
+                upiId: uId || "9154095125@ybl",
+                merchantName: mName || "A Bhaskar",
+                customQrImage: qImg
+            }).then(() => alert("All settings and QR configuration synced successfully!"))
               .catch(err => alert("Error syncing layout properties: " + err.message));
         }
 
@@ -152,7 +189,6 @@
                 const row = document.createElement('div');
                 row.className = "flex items-center justify-between bg-gray-50 border border-gray-200 p-3 rounded-xl shadow-sm";
                 
-                // EDITED: Safely escaped strings inside the onclick edit function to avoid crashes with spaces/text values
                 row.innerHTML = `
                     <div class="flex items-center space-x-3">
                         <div class="w-12 h-12 overflow-hidden rounded-lg border border-gray-200 bg-white flex items-center justify-center shrink-0">
@@ -187,7 +223,6 @@
                 return;
             }
 
-            // EDITED: Saved 'price' directly as string text instead of parsing it to a strict number format
             const itemData = {
                 name: name,
                 price: price, 
